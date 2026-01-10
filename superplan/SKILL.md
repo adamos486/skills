@@ -549,7 +549,40 @@ it('should authenticate user with correct password', () => {
 ## Phase 9: DOCUMENT - Write the Plan
 
 ### What You're Doing
-Writing the complete plan to `docs/<feature>-plan.md`.
+Writing the complete plan to `docs/<feature>-plan.md`. For large plans that exceed ~20,000 tokens, split into multiple files: `docs/<feature>-plan-1.md`, `docs/<feature>-plan-2.md`, etc.
+
+### Multi-File Plan Strategy
+
+Large comprehensive plans may exceed file size limits (~25,000 tokens). When this happens:
+
+1. **Split by logical boundaries** - Each file should contain complete sections:
+   - **File 1 (`-plan-1.md`)**: Executive Summary, Requirements, Research & Best Practices, Architecture
+   - **File 2 (`-plan-2.md`)**: Phase 0 and Phase 1 (parallelizable phases)
+   - **File 3+ (`-plan-N.md`)**: Remaining phases, Testing Strategy, Assumptions, Appendix
+
+2. **Each file must be self-contained readable**:
+   - Include a header referencing the plan set
+   - Include navigation links to other parts
+   - Include the Table of Contents for that specific file
+
+3. **Size thresholds** (estimate ~4 tokens per word):
+   - Under ~4,000 lines / ~20,000 tokens: Single file
+   - Over ~4,000 lines / ~20,000 tokens: Split into multiple files
+
+### Multi-File Header Template
+
+For split plans, use this header in each file:
+
+```markdown
+# [Feature Name] Implementation Plan - Part [N] of [Total]
+
+> **Plan Set**: `docs/<feature>-plan-*.md`
+> **This File**: Part [N] - [Section Names]
+> **Navigation**: [Part 1](feature-plan-1.md) | [Part 2](feature-plan-2.md) | ...
+>
+> Generated: [DATE]
+> Status: Draft | In Review | Approved | In Progress | Complete
+```
 
 ### Plan File Structure
 
@@ -677,10 +710,11 @@ Status: Draft | In Review | Approved | In Progress | Complete
 - [Link 2]
 ```
 
-### Chunked Writing
+### Chunked Writing & Multi-File Splitting
 
-For large plans (>500 lines), write in chunks:
+For large plans (>500 lines), write in chunks. For very large plans that will exceed ~20,000 tokens, use multiple files:
 
+**Single File Plans** (under ~4,000 lines):
 1. Write Overview + Requirements first
 2. Save and confirm written
 3. Write Architecture section
@@ -689,7 +723,29 @@ For large plans (>500 lines), write in chunks:
 6. Save after each phase
 7. Write Assumptions + Appendix last
 
-This prevents context loss and creates natural checkpoints.
+**Multi-File Plans** (over ~4,000 lines / ~20,000 tokens):
+
+When content exceeds limits, split proactively:
+
+1. **File 1** (`<feature>-plan-1.md`):
+   - Executive Summary, Requirements, Research & Best Practices, Architecture
+   - Phase Overview diagram
+   - Target: ~3,000-4,000 lines max
+
+2. **File 2** (`<feature>-plan-2.md`):
+   - Phase 0: Setup
+   - Phase 1A, 1B, 1C (parallelizable phases)
+   - Target: ~3,000-4,000 lines max
+
+3. **File 3+** (`<feature>-plan-N.md`):
+   - Remaining phases (Phase 2, etc.)
+   - Testing Strategy
+   - Assumptions & Known Unknowns
+   - Appendix
+
+**Detection**: If a single phase's code deltas and tests exceed ~2,000 lines, that phase alone may need its own file.
+
+This prevents context loss, creates natural checkpoints, and ensures files remain readable.
 
 ---
 
@@ -719,7 +775,7 @@ Research best practices using web search with TODAY'S DATE.
 Use exploration tools to understand existing patterns.
 
 ### Step 5: Create Plan
-Write plan to `docs/<feature-name>-plan.md`.
+Write plan to `docs/<feature-name>-plan.md`. For large plans exceeding ~20,000 tokens, split into multiple files: `docs/<feature-name>-plan-1.md`, `docs/<feature-name>-plan-2.md`, etc.
 
 ### Step 6: Review
 Ask user to review plan and provide feedback.
@@ -750,7 +806,8 @@ Use these status updates throughout:
 [Phase overview with parallelization notes]
 
 📝 PLAN WRITTEN
-Location: docs/<feature>-plan.md
+Location: docs/<feature>-plan.md (or docs/<feature>-plan-*.md if split)
+Files: [1 | N files if split]
 Total phases: X
 Parallelizable phases: Y
 

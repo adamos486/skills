@@ -1071,23 +1071,49 @@ npm run test:coverage
 
 ## Chunked Writing Guide
 
-For large plans, write in chunks to avoid context issues:
+For large plans, write in chunks to avoid context issues.
 
-### Chunk 1: Setup (First Message)
+### When to Use Multiple Files
+
+Plans exceeding ~20,000 tokens (~4,000 lines) should be split into multiple files to avoid read errors:
+- `<feature>-plan-1.md`: Overview, Requirements, Research, Architecture
+- `<feature>-plan-2.md`: Phase 0 and Phase 1 (parallelizable phases)
+- `<feature>-plan-N.md`: Remaining phases, Testing, Assumptions, Appendix
+
+### Multi-File Header
+
+Each file in a split plan should include:
+
+```markdown
+# [Feature Name] Implementation Plan - Part [N] of [Total]
+
+> **Plan Set**: `docs/<feature>-plan-*.md`
+> **This File**: Part [N] - [Section Names]
+> **Navigation**: [Part 1](feature-plan-1.md) | [Part 2](feature-plan-2.md) | ...
+>
+> Generated: [DATE]
+> Status: Draft | In Review | Approved | In Progress | Complete
+
+## Contents in This File
+- [Section 1](#section-1)
+- [Section 2](#section-2)
+```
+
+### Single File: Chunk 1 (First Message)
 - Executive Summary
 - Requirements
 - Save file
 
-### Chunk 2: Architecture (Second Message)
+### Single File: Chunk 2 (Second Message)
 - Research & Best Practices
 - Architecture diagrams
 - Save file
 
-### Chunk 3-N: Phases (One Per Message)
+### Single File: Chunk 3-N (One Per Message)
 - Write one phase completely
 - Save file after each phase
 
-### Final Chunk: Wrap-up
+### Single File: Final Chunk
 - Testing Strategy
 - Assumptions & Unknowns
 - Appendix
@@ -1096,7 +1122,8 @@ For large plans, write in chunks to avoid context issues:
 ### Resuming from Checkpoint
 
 When resuming:
-1. Read the existing plan file
+1. Read the existing plan file(s)
 2. Find the last completed section
 3. Continue from there
 4. Reference the existing content to maintain consistency
+5. For multi-file plans, ensure navigation links are updated
