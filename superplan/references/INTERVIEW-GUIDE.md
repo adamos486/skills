@@ -157,6 +157,31 @@ This guide provides comprehensive question templates for gathering requirements 
 
 ---
 
+### 8. Quality Gates & Tooling
+
+**Essential Questions:**
+- What linter, formatter, and type checker does this project use?
+- What test framework is in use, and what's the coverage threshold?
+- Are there CI/CD quality gates that must pass?
+
+**Deeper Questions:**
+- Are there pre-commit hooks configured?
+- What's the required test coverage percentage?
+- Are there code review requirements?
+- Is there a staging environment for QA?
+- Are there performance benchmarks to maintain?
+
+**Red Flags to Probe:**
+- No linter or formatter configured
+- No type checking enabled
+- No test framework set up
+- No CI/CD pipeline
+
+**Bootstrap Trigger:**
+If any of these are missing, plan must include **Phase 0: Bootstrap** to set them up before implementation.
+
+---
+
 ## Question Selection Strategy
 
 ### For Small Features (1-2 days)
@@ -165,6 +190,7 @@ Ask only from:
 - Scope (MVP question)
 - Technical (constraints question)
 - Testing (how to validate question)
+- Quality Gates (existing tooling)
 
 **Example:**
 ```
@@ -173,6 +199,7 @@ I have a few quick questions before planning:
 1. **Scope**: Is this the complete feature, or is it part of something larger?
 2. **Technical**: Any specific libraries or patterns I should use/avoid?
 3. **Validation**: How should we verify this is working correctly?
+4. **Quality**: What quality tools (linter/formatter/tests) are already set up?
 ```
 
 ### For Medium Features (1-2 weeks)
@@ -183,6 +210,7 @@ Ask from:
 - Technical (constraints + performance)
 - Data (what data + where from)
 - Testing (validation + sign-off)
+- Quality Gates (tooling + coverage requirements)
 
 **Example:**
 ```
@@ -193,6 +221,7 @@ Before I create the implementation plan, I need to understand:
 3. **Data**: What data does this feature need, and where does it come from?
 4. **Performance**: Are there specific performance requirements?
 5. **Validation**: Who needs to sign off, and what are the key test scenarios?
+6. **Quality**: What's the test coverage threshold and CI/CD requirements?
 ```
 
 ### For Large Features (Epics, Multi-Week)
@@ -304,6 +333,18 @@ After completing the interview, document findings:
 ### Out of Scope (Confirmed)
 - [Item 1]
 - [Item 2]
+
+### Quality Gates Status
+| Tool | Status | Config | Notes |
+|------|--------|--------|-------|
+| Linter | ✅/❌ | [path] | [notes] |
+| Formatter | ✅/❌ | [path] | [notes] |
+| Type Checker | ✅/❌ | [path] | [notes] |
+| Test Framework | ✅/❌ | [path] | [notes] |
+| CI/CD | ✅/❌ | [path] | [notes] |
+
+**Bootstrap Required**: [Yes / No]
+**Coverage Threshold**: [X%]
 
 ### Assumptions Made
 | # | Assumption | Risk if Wrong | Agreed By |

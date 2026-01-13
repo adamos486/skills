@@ -19,13 +19,14 @@ Copy and adapt this template when creating new implementation plans.
 ## Table of Contents
 
 1. [Executive Summary](#executive-summary)
-2. [Requirements](#requirements)
-3. [Research & Best Practices](#research--best-practices)
-4. [Architecture](#architecture)
-5. [Implementation Phases](#implementation-phases)
-6. [Testing Strategy](#testing-strategy)
-7. [Assumptions & Known Unknowns](#assumptions--known-unknowns)
-8. [Appendix](#appendix)
+2. [Technology Stack](#technology-stack)
+3. [Requirements](#requirements)
+4. [Research & Best Practices](#research--best-practices)
+5. [Architecture](#architecture)
+6. [Implementation Phases](#implementation-phases)
+7. [Testing Strategy](#testing-strategy)
+8. [Assumptions & Known Unknowns](#assumptions--known-unknowns)
+9. [Appendix](#appendix)
 
 ---
 
@@ -49,17 +50,63 @@ Copy and adapt this template when creating new implementation plans.
 | [Decision 1] | [Why] | [Other options] |
 | [Decision 2] | [Why] | [Other options] |
 
-### Phase Overview
+### Phase Overview (with Poker Estimates)
 
-| Phase | Name | Depends On | Parallel With | Status |
-|-------|------|------------|---------------|--------|
-| 0 | Setup | - | - | ⬜ |
-| 1A | [Name] | 0 | 1B, 1C | ⬜ |
-| 1B | [Name] | 0 | 1A, 1C | ⬜ |
-| 1C | [Name] | 0 | 1A, 1B | ⬜ |
-| 2 | Integration | 1A, 1B, 1C | - | ⬜ |
+| Phase | Name | Depends On | Parallel With | Estimate | Status |
+|-------|------|------------|---------------|----------|--------|
+| 0 | Bootstrap (if needed) | - | - | 5 | ⬜/⏭️ |
+| 1 | Setup | 0 | - | 3 | ⬜ |
+| 2A | [Name] | 1 | 2B, 2C | 8 | ⬜ |
+| 2B | [Name] | 1 | 2A, 2C | 5 | ⬜ |
+| 2C | [Name] | 1 | 2A, 2B | 3 | ⬜ |
+| 3 | Integration | 2A, 2B, 2C | - | 5 | ⬜ |
 
-**Legend**: ⬜ Not Started | 🔄 In Progress | ✅ Complete | ⏸️ Blocked
+**Total Estimate**: [Sum] points
+
+**Legend**: ⬜ Not Started | 🔄 In Progress | ✅ Complete | ⏸️ Blocked | ⏭️ Skipped
+
+**PARALLEL EXECUTION**: Phases marked as "Parallel With" MUST be executed using parallel sub-agents.
+
+---
+
+## Technology Stack (Detected)
+
+### Languages
+- **Primary**: [Language] v[X.Y.Z]
+- **Secondary**: [Language] (if applicable)
+
+### Frameworks
+| Framework | Version | Purpose |
+|-----------|---------|---------|
+| [Framework] | [X.Y.Z] | [Frontend/Backend/Testing/etc.] |
+
+### Build Tools
+| Tool | Version | Purpose |
+|------|---------|---------|
+| [npm/pnpm/yarn] | [X.Y.Z] | Package manager |
+| [webpack/vite/etc.] | [X.Y.Z] | Bundler |
+
+### Quality Tools Status
+
+| Tool Type | Status | Config File | Command |
+|-----------|--------|-------------|---------|
+| Linter | ✅/❌ | [path or "N/A"] | [npm run lint] |
+| Formatter | ✅/❌ | [path or "N/A"] | [npm run format] |
+| Type Checker | ✅/❌ | [path or "N/A"] | [npm run typecheck] |
+| Test Framework | ✅/❌ | [path or "N/A"] | [npm test] |
+
+### Bootstrap Required?
+
+- [ ] **Yes** - Missing tools detected, include Phase 0: Bootstrap
+- [ ] **No** - All quality tools present, skip Phase 0
+
+### Best Practices Research Targets
+
+Based on detected stack, research these topics:
+- [Language] [YEAR] best practices
+- [Framework] [YEAR] patterns and recommendations
+- [Framework] security guidelines (OWASP)
+- [Language] testing best practices [YEAR]
 
 ---
 
@@ -334,35 +381,115 @@ ALTER TABLE [table_name]
 ### Phase Dependency Graph
 
 ```
+┌─────────────────────────────────────────────────────────────────────┐
+│      Phase 0: Bootstrap (CONDITIONAL - only if tools missing)      │
+│         (Linter, Formatter, Type Checker, Test Framework)          │
+│                          Estimate: 5 pts                            │
+└──────────────────────────────┬──────────────────────────────────────┘
+                               │ (skip if tools present)
+                               ▼
            ┌─────────────────────────────────────────┐
-           │           Phase 0: Setup                │
+           │           Phase 1: Setup                │
            │     (Database migrations, configs)      │
+           │              Estimate: 3 pts            │
            └──────────────────┬──────────────────────┘
                               │
               ┌───────────────┼───────────────┐
-              │               │               │
+              │               │               │  ← USE PARALLEL SUB-AGENTS
               ▼               ▼               ▼
        ┌───────────┐   ┌───────────┐   ┌───────────┐
-       │ Phase 1A  │   │ Phase 1B  │   │ Phase 1C  │
+       │ Phase 2A  │   │ Phase 2B  │   │ Phase 2C  │
        │ [Backend] │   │ [Frontend]│   │ [Tests]   │
-       │           │   │           │   │           │
+       │  8 pts    │   │   5 pts   │   │  3 pts    │
        └─────┬─────┘   └─────┬─────┘   └─────┬─────┘
              │               │               │
              └───────────────┼───────────────┘
                              │
                              ▼
                   ┌─────────────────────┐
-                  │   Phase 2: Integrate │
+                  │  Phase 3: Integrate  │
                   │   (Wire up + E2E)    │
+                  │     Estimate: 5 pts  │
                   └─────────────────────┘
 ```
 
 ---
 
-### Phase 0: Setup
+### Phase 0: Bootstrap (CONDITIONAL)
 
+> **Condition**: Execute ONLY if quality tools not detected in codebase
 > **Depends On**: Nothing
 > **Can Run With**: Nothing
+> **Estimate**: 5 points
+> **Status**: ⬜ Not Started | ⏭️ Skipped (tools present)
+
+#### Objectives
+
+- [ ] Bootstrap linter (eslint/ruff/golint based on detected language)
+- [ ] Bootstrap formatter (prettier/black/gofmt based on detected language)
+- [ ] Bootstrap type checker (tsc/mypy based on detected language)
+- [ ] Bootstrap test framework (jest/pytest/go test based on detected language)
+- [ ] Configure pre-commit hooks (optional)
+
+#### Tasks with Estimates
+
+| Task | Estimate | Parallel With |
+|------|----------|---------------|
+| Add linter config | 2 | Formatter, Type Checker |
+| Add formatter config | 1 | Linter, Type Checker |
+| Add type checker config | 2 | Linter, Formatter |
+| Add test framework | 3 | None (after above) |
+| Configure pre-commit | 1 | None (last) |
+
+**Note**: Linter, Formatter, and Type Checker configs CAN be added in parallel using sub-agents.
+
+#### Code Changes (Example: TypeScript/Node.js)
+
+##### File: `.eslintrc.json` (CREATE)
+```json
+{
+  "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint"],
+  "root": true
+}
+```
+
+##### File: `.prettierrc` (CREATE)
+```json
+{
+  "semi": true,
+  "singleQuote": true,
+  "tabWidth": 2
+}
+```
+
+##### File: `package.json` (MODIFY)
+```diff
+ "scripts": {
++  "lint": "eslint src --ext .ts,.tsx",
++  "format": "prettier --check src",
++  "format:fix": "prettier --write src",
++  "typecheck": "tsc --noEmit",
++  "test": "jest"
+ }
+```
+
+#### Definition of Done (Quality Gate)
+- [ ] Linter runs without configuration errors
+- [ ] Formatter runs without configuration errors
+- [ ] Type checker runs without configuration errors
+- [ ] Test framework runs (empty suite is OK)
+- [ ] All tools added to package.json scripts
+- [ ] CI/CD updated to run quality checks (if applicable)
+
+---
+
+### Phase 1: Setup
+
+> **Depends On**: Phase 0 (or nothing if skipped)
+> **Can Run With**: Nothing
+> **Estimate**: 3 points
 > **Status**: ⬜ Not Started
 
 #### Objectives
@@ -435,12 +562,17 @@ describe('[Table] Migration', () => {
 });
 ```
 
-#### Acceptance Criteria
+#### Definition of Done (Quality Gate)
 
+- [ ] Code passes linter
+- [ ] Code passes formatter check
+- [ ] Code passes type checker
 - [ ] Migration runs successfully
 - [ ] Rollback works correctly
 - [ ] Configuration loads without errors
-- [ ] No existing tests are broken
+- [ ] All new tests pass
+- [ ] All existing tests still pass
+- [ ] No new warnings introduced
 
 #### Manual Testing Instructions
 
@@ -458,10 +590,11 @@ npm run migrate
 
 ---
 
-### Phase 1A: [Backend API]
+### Phase 2A: [Backend API]
 
-> **Depends On**: Phase 0
-> **Can Run With**: Phase 1B, Phase 1C
+> **Depends On**: Phase 1
+> **Can Run With**: Phase 2B, Phase 2C (USE PARALLEL SUB-AGENTS)
+> **Estimate**: 8 points
 > **Status**: ⬜ Not Started
 
 #### Objectives
@@ -616,14 +749,19 @@ describe('POST /api/[feature]', () => {
 });
 ```
 
-#### Acceptance Criteria
+#### Definition of Done (Quality Gate)
 
+- [ ] Code passes linter (eslint/ruff/golint)
+- [ ] Code passes formatter check (prettier/black/gofmt)
+- [ ] Code passes type checker (tsc/mypy)
 - [ ] All unit tests pass
 - [ ] All integration tests pass
+- [ ] Test coverage >= 80% for new code
 - [ ] API responds correctly to valid requests
 - [ ] API returns proper error codes for invalid requests
 - [ ] Authentication is enforced
-- [ ] No existing tests are broken
+- [ ] All existing tests still pass
+- [ ] No new warnings introduced
 
 #### Manual Testing Instructions
 
@@ -650,10 +788,11 @@ curl -X POST http://localhost:3000/api/[feature] \
 
 ---
 
-### Phase 1B: [Frontend UI]
+### Phase 2B: [Frontend UI]
 
-> **Depends On**: Phase 0
-> **Can Run With**: Phase 1A, Phase 1C
+> **Depends On**: Phase 1
+> **Can Run With**: Phase 2A, Phase 2C (USE PARALLEL SUB-AGENTS)
+> **Estimate**: 5 points
 > **Status**: ⬜ Not Started
 
 #### Objectives
@@ -814,15 +953,20 @@ describe('[Feature]Form', () => {
 });
 ```
 
-#### Acceptance Criteria
+#### Definition of Done (Quality Gate)
 
+- [ ] Code passes linter (eslint)
+- [ ] Code passes formatter check (prettier)
+- [ ] Code passes type checker (tsc)
 - [ ] All component tests pass
+- [ ] Test coverage >= 80% for new code
 - [ ] Form renders correctly
 - [ ] Form validation works
 - [ ] Loading states display correctly
 - [ ] Error states display correctly
 - [ ] Form resets after successful submission
-- [ ] No existing tests are broken
+- [ ] All existing tests still pass
+- [ ] No new warnings introduced
 
 #### Manual Testing Instructions
 
@@ -835,10 +979,11 @@ describe('[Feature]Form', () => {
 
 ---
 
-### Phase 1C: [Additional Tests / Edge Cases]
+### Phase 2C: [Additional Tests / Edge Cases]
 
-> **Depends On**: Phase 0
-> **Can Run With**: Phase 1A, Phase 1B
+> **Depends On**: Phase 1
+> **Can Run With**: Phase 2A, Phase 2B (USE PARALLEL SUB-AGENTS)
+> **Estimate**: 3 points
 > **Status**: ⬜ Not Started
 
 #### Objectives
@@ -848,14 +993,23 @@ describe('[Feature]Form', () => {
 - [ ] Write security tests (if applicable)
 - [ ] Create test fixtures/factories
 
-[Continue with same structure...]
+#### Definition of Done (Quality Gate)
+
+- [ ] Code passes linter
+- [ ] Code passes formatter check
+- [ ] Code passes type checker
+- [ ] All edge case tests pass
+- [ ] Test coverage >= 80% for new code
+- [ ] All existing tests still pass
+- [ ] No new warnings introduced
 
 ---
 
-### Phase 2: Integration
+### Phase 3: Integration
 
-> **Depends On**: Phase 1A, Phase 1B, Phase 1C
+> **Depends On**: Phase 2A, Phase 2B, Phase 2C
 > **Can Run With**: Nothing
+> **Estimate**: 5 points
 > **Status**: ⬜ Not Started
 
 #### Objectives
@@ -907,14 +1061,21 @@ test.describe('[Feature] E2E', () => {
 });
 ```
 
-#### Acceptance Criteria
+#### Definition of Done (Quality Gate)
 
+- [ ] Code passes all linters
+- [ ] Code passes all formatter checks
+- [ ] Code passes all type checkers
 - [ ] All E2E tests pass
+- [ ] All unit tests pass
+- [ ] All integration tests pass
+- [ ] Test coverage >= 80% overall for new code
 - [ ] Frontend successfully communicates with backend
 - [ ] Feature works as expected in realistic scenarios
 - [ ] Performance meets requirements
 - [ ] All previous phase tests still pass
 - [ ] No regressions in existing functionality
+- [ ] No new warnings introduced
 
 #### Manual Testing Instructions
 

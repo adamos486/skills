@@ -28,7 +28,23 @@ Which would you like to do?
 - Identify story type (User Story, Technical Task, Bug Fix, Epic)
 - Summarize initial understanding in 1-2 sentences
 
-### Step 2: Interview
+### Step 2: Detect (USE PARALLEL SUB-AGENTS)
+
+Identify the technology stack to inform best practices research:
+
+**Launch parallel Explore agents to detect:**
+
+1. **Languages** - Primary language(s): TypeScript, Python, Go, Rust, etc.
+2. **Frameworks** - Major frameworks: React, Next.js, FastAPI, Django, etc.
+3. **Quality Tools** - Existing linters, formatters, type checkers:
+   - Look for: `.eslintrc`, `.prettierrc`, `tsconfig.json`, `pyproject.toml`, etc.
+4. **Testing Tools** - Test frameworks: jest, pytest, vitest, go test, etc.
+
+**Determine Bootstrap Requirements:**
+- If quality tools missing → Plan must include Phase 0: Bootstrap
+- If testing not set up → Plan must include Phase 0: Bootstrap
+
+### Step 3: Interview
 
 After intake, ask 3-5 clarifying questions based on what's missing:
 
@@ -47,16 +63,23 @@ See [INTERVIEW-GUIDE.md](INTERVIEW-GUIDE.md) for comprehensive question template
 
 **Wait for answers before proceeding.**
 
-### Step 3: Research
+### Step 4: Research (USE PARALLEL WEB SEARCHES)
 
-After clarification, research current best practices:
+After clarification, research current best practices **for the DETECTED stack**:
 
-- Use web search with TODAY'S DATE
-- Research industry standards (OWASP, WCAG, etc.)
-- Check framework-specific patterns and recommendations
+**Launch parallel web searches targeting detected technologies:**
+
+- `[Language] [YEAR] best practices` (e.g., "TypeScript 2025 best practices")
+- `[Framework] [YEAR] patterns` (e.g., "React 2025 patterns")
+- `[Framework] security guidelines OWASP`
+- `[Language] testing best practices [YEAR]`
+
+**Also research:**
+- Industry standards (OWASP, WCAG, etc.)
+- Recommended linter/formatter configs for detected stack
 - Document sources and key findings
 
-### Step 4: Codebase Exploration
+### Step 5: Codebase Exploration
 
 Analyze the existing codebase:
 
@@ -65,18 +88,27 @@ Analyze the existing codebase:
 - Note shared utilities that can be reused
 - Document any technical debt that affects the work
 
-### Step 5: Create Plan
+### Step 6: Create Plan
 
 Write the plan to `docs/<feature-name>-plan.md`.
 
+**Include in every plan:**
+- Technology Stack section (from DETECT phase)
+- Poker estimates for all phases and tasks
+- Definition of Done (quality gates) for every phase
+- Explicit parallel execution instructions for parallelizable phases
+
+**If Bootstrap required** (from DETECT phase):
+- Include Phase 0: Bootstrap before implementation phases
+
 **For large plans exceeding ~20,000 tokens**, split into multiple files:
 - `docs/<feature-name>-plan-1.md` - Overview, Requirements, Architecture
-- `docs/<feature-name>-plan-2.md` - Phase 0 and Phase 1 (parallelizable)
+- `docs/<feature-name>-plan-2.md` - Phase 0 and parallelizable phases
 - `docs/<feature-name>-plan-N.md` - Remaining phases, Appendix
 
 See [PLAN-TEMPLATE.md](PLAN-TEMPLATE.md) for the complete plan structure.
 
-### Step 6: Review
+### Step 7: Review
 
 Ask the user to review and provide feedback:
 
@@ -105,6 +137,21 @@ INTAKE COMPLETE
 - Source: [Pasted / Link / MCP / Verbal]
 - Type: [User Story / Technical Task / Bug Fix / Epic]
 - Summary: [1-2 sentence summary]
+```
+
+### After Detect
+
+```
+DETECT COMPLETE
+- Language: [TypeScript / Python / Go / etc.]
+- Framework: [React / Next.js / FastAPI / etc.]
+- Quality Tools:
+  - Linter: ✅ [eslint] / ❌ Missing
+  - Formatter: ✅ [prettier] / ❌ Missing
+  - Type Checker: ✅ [tsc] / ❌ Missing
+  - Test Framework: ✅ [jest] / ❌ Missing
+- Bootstrap Required: [Yes / No]
+- Research targets: [List of search queries for detected stack]
 ```
 
 ### After Interview
@@ -155,13 +202,24 @@ ARCHITECTURE COMPLETE
 ### After Phase Definition
 
 ```
-PHASES DEFINED
+PHASES DEFINED (with estimates)
 - Total phases: [N]
-- Parallelizable: [List which phases can run together]
+- Total estimate: [Sum] points
+- Bootstrap Required: [Yes (5 pts) / No (skipped)]
+- Parallelizable: [List phases] - USE SUB-AGENTS
 - Sequential: [List phases that must run in order]
 
-Phase Overview:
-[ASCII diagram of phase dependencies]
+Phase Overview with Estimates:
+| Phase | Name | Estimate | Parallel With |
+|-------|------|----------|---------------|
+| 0 | Bootstrap | 5 pts | - (conditional) |
+| 1 | Setup | 3 pts | - |
+| 2A | [Name] | 8 pts | 2B, 2C |
+| 2B | [Name] | 5 pts | 2A, 2C |
+| 2C | [Name] | 3 pts | 2A, 2B |
+| 3 | Integration | 5 pts | - |
+
+Each phase includes Definition of Done (quality gates).
 ```
 
 ### After Plan Written
@@ -171,7 +229,10 @@ PLAN WRITTEN
 - Location: docs/<feature>-plan.md (or docs/<feature>-plan-*.md if split)
 - Files: [1 | N files if split]
 - Total phases: [N]
-- Parallelizable phases: [N]
+- Total estimate: [Sum] points
+- Bootstrap included: [Yes / No (skipped)]
+- Parallelizable phases: [N] - USE SUB-AGENTS
+- Quality gates: Included per phase
 - Lines: ~[N]
 
 Ready for review.

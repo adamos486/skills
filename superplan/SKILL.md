@@ -1,9 +1,9 @@
 ---
 name: superplan
-description: Create comprehensive, multi-phase implementation plans for features. Interviews user for requirements, researches best practices, generates parallelizable phases with TDD-first acceptance criteria, architecture diagrams, and detailed code deltas. Use when starting significant features, epics, or complex tasks.
+description: Create comprehensive, multi-phase implementation plans for features. Detects technology stack, interviews user, researches current best practices, generates parallelizable phases with poker estimates, TDD-first acceptance criteria, quality gates (linters/formatters/typecheckers), and detailed code deltas. Use when starting significant features, epics, or complex tasks.
 metadata:
-  version: "1.1"
-  generated-at: "2025-01-09"
+  version: "2.0"
+  generated-at: "2025-01-13"
 compatibility: Requires internet access for best practices research. Works with any codebase.
 ---
 
@@ -28,16 +28,48 @@ Superplan creates detailed, executable implementation plans that enable parallel
 │                         SUPERPLAN WORKFLOW                          │
 ├─────────────────────────────────────────────────────────────────────┤
 │  1. INTAKE          →  Gather story/requirements from user          │
-│  2. INTERVIEW       →  Ask clarifying questions                     │
-│  3. RESEARCH        →  Look up best practices (as of TODAY)         │
-│  4. EXPLORE         →  Understand existing codebase patterns        │
-│  5. ARCHITECT       →  Design solution with diagrams                │
-│  6. PHASE           →  Break into parallelizable phases             │
-│  7. DETAIL          →  Specify code deltas per phase                │
-│  8. TEST            →  Define failing tests per phase (TDD)         │
-│  9. DOCUMENT        →  Write plan to docs/<feature>-plan.md         │
+│  2. DETECT          →  Identify tech stack, languages, frameworks   │
+│  3. INTERVIEW       →  Ask clarifying questions                     │
+│  4. RESEARCH        →  Look up best practices for DETECTED STACK    │
+│  5. EXPLORE         →  Understand existing codebase patterns        │
+│  6. ARCHITECT       →  Design solution with diagrams                │
+│  7. PHASE           →  Break into parallelizable phases + ESTIMATES │
+│  8. DETAIL          →  Specify code deltas per phase                │
+│  9. TEST            →  Define failing tests per phase (TDD)         │
+│ 10. DOCUMENT        →  Write plan to docs/<feature>-plan.md         │
 └─────────────────────────────────────────────────────────────────────┘
 ```
+
+---
+
+## CRITICAL: Parallel Execution with Sub-Agents
+
+**YOU MUST USE SUB-AGENTS OR PARALLEL TASKS** for every parallelizable operation:
+
+| Operation | How to Execute |
+|-----------|---------------|
+| Independent file reads | Launch multiple Read tasks in single message |
+| Code searches | Use Task tool with multiple Explore agents in parallel |
+| Parallel phases (1A, 1B, 1C) | Execute using parallel sub-agents |
+| Independent test suites | Run unit/integration/e2e concurrently |
+
+**Example**: "Launch 3 sub-agents in parallel to implement Phases 1A, 1B, and 1C"
+
+---
+
+## Poker Planning Estimates
+
+All tasks and phases MUST include Fibonacci estimates: **1, 2, 3, 5, 8, 13, 21**
+
+| Size | Meaning | Example |
+|------|---------|---------|
+| 1 | Trivial | Config value, typo fix |
+| 2 | Small | Single file, simple function |
+| 3 | Medium | Multi-file, new component |
+| 5 | Large | Feature module, API endpoint |
+| 8 | X-Large | Complex feature with dependencies |
+| 13 | Epic chunk | Major subsystem change |
+| 21 | Too big | **Split into smaller tasks** |
 
 ---
 
@@ -67,7 +99,39 @@ Document: Source, Type, Raw Requirements, Initial Understanding (1-2 sentences).
 
 ---
 
-## Phase 2: INTERVIEW - Clarifying Questions
+## Phase 2: DETECT - Technology Stack Analysis
+
+### What You're Doing
+Identifying the technology, programming language, and major frameworks to inform best practices research and quality gate setup.
+
+### Detection Actions (USE PARALLEL SUB-AGENTS)
+
+Launch **parallel Explore agents** to detect:
+
+1. **Languages** - Primary language(s): TypeScript, Python, Go, Rust, Java, etc.
+2. **Frameworks** - Major frameworks: React, Next.js, FastAPI, Django, Express, etc.
+3. **Build Tools** - Package managers, bundlers: npm, pnpm, yarn, webpack, vite, etc.
+4. **Quality Tools** - Existing linters, formatters, type checkers:
+   - Linters: eslint, ruff, golint, pylint
+   - Formatters: prettier, black, gofmt, rustfmt
+   - Type checkers: tsc (TypeScript), mypy (Python), go vet
+5. **Testing Tools** - Test frameworks: jest, pytest, go test, vitest, playwright
+
+### Quality Tools Assessment
+
+| Tool Type | If Present | If Missing |
+|-----------|------------|------------|
+| Linter | Note config path | Add to Phase 0 Bootstrap |
+| Formatter | Note config path | Add to Phase 0 Bootstrap |
+| Type Checker | Note config path | Add to Phase 0 Bootstrap |
+| Test Framework | Note config path | Add to Phase 0 Bootstrap |
+
+### Output
+Document: Languages, frameworks, build tools, quality tools (present/missing), testing setup, Bootstrap requirements.
+
+---
+
+## Phase 3: INTERVIEW - Clarifying Questions
 
 ### What You're Doing
 Asking targeted questions to fill gaps in requirements before planning.
@@ -82,6 +146,7 @@ Ask questions in these categories (select relevant ones):
 4. **Data & State** - Data sources, storage, migrations
 5. **Testing & Validation** - Success criteria, test scenarios, sign-off
 6. **Dependencies** - Blockers, external services, sequencing
+7. **Quality Gates** - Existing CI/CD, required checks, coverage thresholds
 
 ### How to Interview
 
@@ -91,23 +156,33 @@ See [Interview Guide](references/INTERVIEW-GUIDE.md) for comprehensive question 
 
 ---
 
-## Phase 3: RESEARCH - Best Practices Lookup
+## Phase 4: RESEARCH - Best Practices Lookup
 
 ### What You're Doing
-Researching current best practices as of TODAY'S DATE.
+Researching current best practices as of TODAY'S DATE **for the DETECTED technology stack**.
+
+### Research Actions (USE PARALLEL WEB SEARCHES)
+
+Launch **parallel web searches** targeting the detected stack:
+
+1. **[Language] [YEAR] best practices** - e.g., "TypeScript 2025 best practices"
+2. **[Framework] [YEAR] patterns** - e.g., "React 2025 patterns"
+3. **[Framework] security guidelines** - e.g., "Next.js security OWASP"
+4. **[Language] testing best practices** - e.g., "Python pytest 2025"
 
 ### Research Areas
 
 1. **Industry Standards** - Current best practices, security (OWASP), accessibility (WCAG)
 2. **Technology-Specific** - Framework patterns, library versions, known gotchas
 3. **Architecture Patterns** - Recommended patterns, anti-patterns, scalability
+4. **Quality Tool Configs** - Recommended linter/formatter configs for detected stack
 
 ### Output
 Document: Sources consulted, key findings by topic, specific recommendations for this feature.
 
 ---
 
-## Phase 4: EXPLORE - Codebase Analysis
+## Phase 5: EXPLORE - Codebase Analysis
 
 ### What You're Doing
 Understanding existing patterns, conventions, and integration points in the codebase.
@@ -123,7 +198,7 @@ Document: Relevant files table, patterns to follow, integration points, technica
 
 ---
 
-## Phase 5: ARCHITECT - Solution Design
+## Phase 6: ARCHITECT - Solution Design
 
 ### What You're Doing
 Designing the technical solution with diagrams.
@@ -141,35 +216,40 @@ Use ASCII/text diagrams for portability. See [Plan Template](references/PLAN-TEM
 
 ---
 
-## Phase 6: PHASE - Parallel Work Breakdown
+## Phase 7: PHASE - Parallel Work Breakdown with Estimates
 
 ### What You're Doing
-Breaking work into phases that can be executed in parallel where possible.
+Breaking work into phases with **poker estimates** that can be executed in parallel where possible.
 
 ### Phase Design Principles
 
 1. **Independence**: Phases executable without waiting for others when possible
 2. **Testability**: Each phase independently testable
 3. **Clear Boundaries**: Well-defined inputs and outputs
-4. **Reasonable Size**: Each phase ~2-4 hours of work
+4. **Estimated Size**: Each phase with poker estimate (target: 3-8 points)
+5. **Quality Gated**: Each phase includes Definition of Done
 
-### Parallelization Rules
+### Parallelization Rules (CRITICAL: USE SUB-AGENTS)
 
 - **CAN parallelize**: Independent components, separate API endpoints, unrelated tests
+  - **Execute with parallel sub-agents**
 - **CANNOT parallelize**: Sequential dependencies, shared state setup, migrations before data access
 
 ### Output
 
 Create a phase dependency diagram showing:
-- Phase 0 (Setup) at top
+- Phase 0 (Bootstrap/Setup) at top - **CONDITIONAL: only if quality tools missing**
 - Parallel phases branching out
 - Integration phase at bottom
 
-Include dependency table: Phase | Depends On | Can Run With
+Include dependency table with estimates:
+
+| Phase | Name | Depends On | Parallel With | Estimate | Status |
+|-------|------|------------|---------------|----------|--------|
 
 ---
 
-## Phase 7: DETAIL - Code Deltas Per Phase
+## Phase 8: DETAIL - Code Deltas Per Phase
 
 ### What You're Doing
 Specifying exact code changes for each phase.
@@ -185,7 +265,7 @@ See [Plan Template](references/PLAN-TEMPLATE.md) for full code delta examples.
 
 ---
 
-## Phase 8: TEST - TDD Acceptance Criteria
+## Phase 9: TEST - TDD Acceptance Criteria
 
 ### What You're Doing
 Defining failing tests for each phase BEFORE implementation.
@@ -217,7 +297,26 @@ See [Testing Pyramid](references/TESTING-PYRAMID.md) for comprehensive test exam
 
 ---
 
-## Phase 9: DOCUMENT - Write the Plan
+## Definition of Done (Quality Gate) - REQUIRED PER PHASE
+
+Every phase MUST include this Definition of Done checklist:
+
+```markdown
+### Definition of Done
+- [ ] Code passes linter ([detected linter]: eslint/ruff/golint)
+- [ ] Code passes formatter check ([detected formatter]: prettier/black/gofmt)
+- [ ] Code passes type checker ([detected checker]: tsc/mypy/go vet)
+- [ ] All new code has test coverage (target: 80%+)
+- [ ] All new tests pass
+- [ ] All existing tests still pass
+- [ ] No new warnings introduced
+```
+
+**IF QUALITY TOOLS MISSING**: Plan must include **Phase 0: Quality Bootstrap** before any implementation phases.
+
+---
+
+## Phase 10: DOCUMENT - Write the Plan
 
 ### What You're Doing
 Writing the complete plan to `docs/<feature>-plan.md`.
@@ -269,24 +368,34 @@ For large plans, write in chunks to prevent context loss:
 ### Quick Reference
 
 1. **Intake** → Ask for requirements, capture raw input, identify type
-2. **Interview** → Ask 3-5 clarifying questions, wait for answers
-3. **Research** → Web search best practices with today's date
-4. **Explore** → Analyze codebase patterns and integration points
-5. **Architect** → Design solution with diagrams
-6. **Phase** → Break into parallelizable phases
-7. **Detail** → Specify code deltas per phase
-8. **Test** → Define failing tests (TDD) per phase
-9. **Document** → Write to `docs/<feature>-plan.md`
+2. **Detect** → Identify tech stack, quality tools (USE PARALLEL AGENTS)
+3. **Interview** → Ask 3-5 clarifying questions, wait for answers
+4. **Research** → Web search best practices FOR DETECTED STACK (USE PARALLEL SEARCHES)
+5. **Explore** → Analyze codebase patterns and integration points
+6. **Architect** → Design solution with diagrams
+7. **Phase** → Break into parallelizable phases WITH POKER ESTIMATES
+8. **Detail** → Specify code deltas per phase WITH DEFINITION OF DONE
+9. **Test** → Define failing tests (TDD) per phase
+10. **Document** → Write to `docs/<feature>-plan.md`
 
 ### Status Updates
 
-Use checkpoint summaries after each major phase to show progress. Example:
+Use checkpoint summaries after each major phase to show progress. Examples:
 
 ```
-PHASES DEFINED
+DETECT COMPLETE
+- Language: TypeScript
+- Framework: Next.js 14
+- Quality Tools: eslint ✅, prettier ✅, tsc ✅, jest ✅
+- Bootstrap Required: No
+```
+
+```
+PHASES DEFINED (with estimates)
 - Total phases: 5
-- Parallelizable: 1A, 1B, 1C (after Phase 0)
-- Sequential: Phase 0 → Phase 1s → Phase 2
+- Total estimate: 26 points
+- Parallelizable: 1A (8pts), 1B (5pts), 1C (3pts) - USE SUB-AGENTS
+- Sequential: Phase 0 (5pts) → Phase 1s → Phase 2 (5pts)
 ```
 
 See [Execution Guide](references/EXECUTION-GUIDE.md) for full execution instructions, prompts, and checkpoint templates.
