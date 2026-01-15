@@ -55,6 +55,8 @@ Superplan creates detailed, executable implementation plans that enable parallel
 
 **Example**: "Launch 3 sub-agents in parallel to implement Phases 1A, 1B, and 1C"
 
+**IMPORTANT**: Each sub-agent MUST return its conventional commit message upon completion. The main agent MUST output all commit messages to the user. See [Phase Completion: Conventional Commit Message](#phase-completion-conventional-commit-message---required-per-phase).
+
 ---
 
 ## Poker Planning Estimates
@@ -310,9 +312,126 @@ Every phase MUST include this Definition of Done checklist:
 - [ ] All new tests pass
 - [ ] All existing tests still pass
 - [ ] No new warnings introduced
+- [ ] All tasks completed in this phase are checked off in the plan document
 ```
 
 **IF QUALITY TOOLS MISSING**: Plan must include **Phase 0: Quality Bootstrap** before any implementation phases.
+
+---
+
+## Phase Completion: Conventional Commit Message - REQUIRED PER PHASE
+
+**CRITICAL: At the end of EVERY phase, you MUST output a conventional commit message.**
+
+### Rules
+
+1. **OUTPUT ONLY** - Print the commit message to the console. **NEVER stage files. NEVER create commits.** The user will handle all git operations.
+2. **Conventional Format** - Follow the [Conventional Commits](https://www.conventionalcommits.org/) specification
+3. **Comprehensive Context** - Include all files changed, what was done, and relevant context
+4. **BUBBLE UP FROM SUB-AGENTS** - When phases run in sub-agents or background tasks, the conventional commit message MUST be returned to the main process. The main agent MUST output all commit messages to the user so they can make commits for each phase.
+
+### Commit Message Format
+
+```
+<type>(<scope>): <short summary>
+
+<body - detailed description of changes>
+
+Files changed:
+- path/to/file1.ts (CREATE/MODIFY/DELETE)
+- path/to/file2.ts (CREATE/MODIFY/DELETE)
+
+<footer - breaking changes, issue references, etc.>
+```
+
+### Types
+
+| Type | When to Use |
+|------|-------------|
+| `feat` | New feature or capability |
+| `fix` | Bug fix |
+| `refactor` | Code restructuring without behavior change |
+| `test` | Adding or updating tests |
+| `docs` | Documentation changes |
+| `style` | Formatting, linting (no code change) |
+| `chore` | Build, config, dependencies |
+| `perf` | Performance improvements |
+
+### Example Output
+
+At the end of a phase, output:
+
+```
+PHASE 1A COMPLETE - Conventional Commit Message:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+feat(auth): implement JWT token validation middleware
+
+Add middleware to validate JWT tokens on protected routes.
+Includes token parsing, signature verification, and expiry checks.
+Extracts user claims and attaches to request context.
+
+Files changed:
+- src/middleware/auth.ts (CREATE)
+- src/types/auth.ts (CREATE)
+- src/routes/protected.ts (MODIFY)
+- tests/middleware/auth.test.ts (CREATE)
+
+Refs: #123
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️  DO NOT COMMIT - User will handle git operations
+```
+
+**IMPORTANT**: Always include the warning that the user will handle git operations. Never assume you will commit or stage files.
+
+### Sub-Agent and Background Task Handling
+
+When phases execute in parallel using sub-agents or background tasks:
+
+1. **Sub-Agent Responsibility**: Each sub-agent MUST include its conventional commit message in its return output
+2. **Main Agent Responsibility**: The main agent MUST:
+   - Collect all commit messages from completed sub-agents/background tasks
+   - Output each commit message to the user immediately upon sub-agent completion
+   - Clearly label which phase each commit message belongs to
+
+**Example - Parallel Phase Completion:**
+
+```
+PARALLEL PHASES COMPLETE (1A, 1B, 1C)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PHASE 1A - Commit Message:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+feat(auth): implement JWT token validation
+
+Files changed:
+- src/middleware/auth.ts (CREATE)
+- tests/middleware/auth.test.ts (CREATE)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PHASE 1B - Commit Message:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+feat(api): add user profile endpoints
+
+Files changed:
+- src/routes/profile.ts (CREATE)
+- src/types/user.ts (MODIFY)
+- tests/routes/profile.test.ts (CREATE)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PHASE 1C - Commit Message:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+feat(ui): create settings page component
+
+Files changed:
+- src/components/Settings.tsx (CREATE)
+- src/styles/settings.css (CREATE)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️  DO NOT COMMIT - User will handle git operations for each phase
+```
 
 ---
 
@@ -378,6 +497,10 @@ For large plans, write in chunks to prevent context loss:
 9. **Test** → Define failing tests (TDD) per phase
 10. **Document** → Write to `docs/<feature>-plan.md`
 
+**PHASE COMPLETION (after each phase during execution):**
+- Check off all completed tasks in the plan document
+- Output conventional commit message (NEVER commit, user handles git)
+
 ### Status Updates
 
 Use checkpoint summaries after each major phase to show progress. Examples:
@@ -396,6 +519,27 @@ PHASES DEFINED (with estimates)
 - Total estimate: 26 points
 - Parallelizable: 1A (8pts), 1B (5pts), 1C (3pts) - USE SUB-AGENTS
 - Sequential: Phase 0 (5pts) → Phase 1s → Phase 2 (5pts)
+```
+
+```
+PHASE 1A COMPLETE
+✅ Tasks checked off in plan document
+✅ All Definition of Done criteria met
+
+Conventional Commit Message:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+feat(api): add user authentication endpoints
+
+Implement login, logout, and token refresh endpoints.
+Add request validation and error handling.
+
+Files changed:
+- src/routes/auth.ts (CREATE)
+- src/middleware/validate.ts (MODIFY)
+- tests/routes/auth.test.ts (CREATE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️  DO NOT COMMIT - User will handle git operations
 ```
 
 See [Execution Guide](references/EXECUTION-GUIDE.md) for full execution instructions, prompts, and checkpoint templates.
