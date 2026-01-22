@@ -1,10 +1,10 @@
 ---
 name: superplan
-description: Create comprehensive, multi-phase implementation plans for features. Detects technology stack, interviews user, researches current best practices, generates parallelizable phases with poker estimates, TDD-first acceptance criteria, quality gates (linters/formatters/typecheckers), and detailed code deltas. Use when starting significant features, epics, or complex tasks.
+description: Use when starting significant features, epics, or complex tasks. Creates multi-phase implementation plans with parallelizable phases, poker estimates, TDD-first acceptance criteria, and quality gates. Detects tech stack from CLAUDE.md/AGENTS.md (bypassing internet research if complete) or via codebase scan.
 metadata:
-  version: "2.0"
-  generated-at: "2025-01-13"
-compatibility: Requires internet access for best practices research. Works with any codebase.
+  version: "2.1"
+  generated-at: "2025-01-21"
+compatibility: Internet access used for best practices research (bypassed if CLAUDE.md/AGENTS.md provides complete tech stack). Works with any codebase.
 ---
 
 # Superplan: Comprehensive Feature Planning
@@ -28,10 +28,13 @@ Superplan creates detailed, executable implementation plans that enable parallel
 │                         SUPERPLAN WORKFLOW                          │
 ├─────────────────────────────────────────────────────────────────────┤
 │  1. INTAKE          →  Gather story/requirements from user          │
-│  2. DETECT          →  Identify tech stack, languages, frameworks   │
+│  2. DETECT          →  Check CLAUDE.md/AGENTS.md first, then scan   │
+│                        (BYPASS codebase scan if docs complete)      │
 │  3. INTERVIEW       →  Ask clarifying questions                     │
 │  4. RESEARCH        →  Look up best practices for DETECTED STACK    │
+│                        (BYPASS if CLAUDE.md/AGENTS.md was complete) │
 │  5. EXPLORE         →  Understand existing codebase patterns        │
+│                        (ALWAYS runs - never bypassed)               │
 │  6. REFACTOR ASSESS →  Evaluate if refactoring should precede work  │
 │  7. ARCHITECT       →  Design solution with diagrams                │
 │  8. PHASE           →  Break into parallelizable phases + ESTIMATES │
@@ -107,7 +110,61 @@ Document: Source, Type, Raw Requirements, Initial Understanding (1-2 sentences).
 ### What You're Doing
 Identifying the technology, programming language, and major frameworks to inform best practices research and quality gate setup.
 
-### Detection Actions (USE PARALLEL SUB-AGENTS)
+### Detection Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         DETECT PHASE FLOW                                    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  1. CHECK for CLAUDE.md or AGENTS.md in project root                        │
+│     ├─ Found & Complete? → BYPASS codebase scanning for tech stack          │
+│     │                   → BYPASS internet research (Phase 4)                │
+│     │                   → Proceed directly to INTERVIEW (Phase 3)           │
+│     └─ Not Found or Incomplete? → Continue with Detection Actions below     │
+│                                                                             │
+│  NOTE: This does NOT bypass EXPLORE phase (Phase 5) - always scan codebase  │
+│        for patterns and integration points regardless of CLAUDE.md presence │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Step 1: Check for Project Documentation Files
+
+**FIRST**, check for `CLAUDE.md` or `AGENTS.md` at project root:
+
+```bash
+# Check for these files (in priority order):
+1. CLAUDE.md   # Claude Code's project documentation
+2. AGENTS.md   # Codex's project documentation
+```
+
+**If found**, parse for these tech stack elements:
+
+| Element | What to Look For |
+|---------|-----------------|
+| Languages | "TypeScript", "Python", "Go", etc. in project description |
+| Frameworks | Framework mentions: React, Next.js, FastAPI, Django, etc. |
+| Build Tools | Package manager, bundler references: npm, pnpm, vite, etc. |
+| Quality Tools | Linter/formatter/type checker config mentions |
+| Testing Tools | Test framework references: jest, pytest, vitest, etc. |
+| Dependencies | Key libraries and their versions |
+
+### Completeness Check
+
+A project documentation file is **COMPLETE** for tech stack if it answers ALL of:
+
+- [ ] Primary language(s) identified
+- [ ] Major framework(s) identified (if applicable)
+- [ ] Build/package tools identified
+- [ ] Quality tools identified (linter, formatter, type checker)
+- [ ] Test framework identified
+
+**If ALL boxes can be checked from the file** → Skip to Step 3 (output) and mark RESEARCH phase (Phase 4) as BYPASSED
+
+**If ANY box is missing** → Continue with Step 2 (codebase detection)
+
+### Step 2: Detection Actions (USE PARALLEL SUB-AGENTS)
+
+**Only execute if CLAUDE.md/AGENTS.md is missing or incomplete.**
 
 Launch **parallel Explore agents** to detect:
 
@@ -129,8 +186,13 @@ Launch **parallel Explore agents** to detect:
 | Type Checker | Note config path | Add to Phase 0 Bootstrap |
 | Test Framework | Note config path | Add to Phase 0 Bootstrap |
 
-### Output
-Document: Languages, frameworks, build tools, quality tools (present/missing), testing setup, Bootstrap requirements.
+### Step 3: Output
+
+Document:
+- **Source**: CLAUDE.md/AGENTS.md or codebase scan
+- **Languages**, frameworks, build tools, quality tools (present/missing), testing setup
+- **Bootstrap requirements**
+- **Research bypass status**: If CLAUDE.md/AGENTS.md provided complete info, note "RESEARCH PHASE BYPASSED - tech stack from project documentation"
 
 ---
 
@@ -163,6 +225,14 @@ See [Interview Guide](references/INTERVIEW-GUIDE.md) for comprehensive question 
 
 ### What You're Doing
 Researching current best practices as of TODAY'S DATE **for the DETECTED technology stack**.
+
+### BYPASS Condition
+
+**If DETECT phase found complete tech stack info in CLAUDE.md or AGENTS.md**, this phase is BYPASSED.
+
+Skip directly to EXPLORE (Phase 5). The project documentation provides authoritative tech stack information.
+
+**Otherwise**, proceed with research actions below.
 
 ### Research Actions (USE PARALLEL WEB SEARCHES)
 
@@ -607,10 +677,10 @@ For large plans, write in chunks to prevent context loss:
 ### Quick Reference
 
 1. **Intake** → Ask for requirements, capture raw input, identify type
-2. **Detect** → Identify tech stack, quality tools (USE PARALLEL AGENTS)
+2. **Detect** → Check CLAUDE.md/AGENTS.md first; if complete, BYPASS scan + RESEARCH
 3. **Interview** → Ask 3-5 clarifying questions, wait for answers
-4. **Research** → Web search best practices FOR DETECTED STACK (USE PARALLEL SEARCHES)
-5. **Explore** → Analyze codebase patterns and integration points
+4. **Research** → Web search best practices (BYPASSED if CLAUDE.md/AGENTS.md complete)
+5. **Explore** → Analyze codebase patterns and integration points (ALWAYS RUNS)
 6. **Refactor Assess** → Evaluate code smells, interview on roadmap, decide if refactoring needed
 7. **Architect** → Design solution with diagrams
 8. **Phase** → Break into parallelizable phases WITH POKER ESTIMATES
@@ -627,11 +697,23 @@ For large plans, write in chunks to prevent context loss:
 Use checkpoint summaries after each major phase to show progress. Examples:
 
 ```
-DETECT COMPLETE
+DETECT COMPLETE (from CLAUDE.md)
+- Source: CLAUDE.md ✅
 - Language: TypeScript
 - Framework: Next.js 14
 - Quality Tools: eslint ✅, prettier ✅, tsc ✅, jest ✅
 - Bootstrap Required: No
+- RESEARCH PHASE: BYPASSED (tech stack from project documentation)
+```
+
+```
+DETECT COMPLETE (from codebase scan)
+- Source: Codebase scan (no CLAUDE.md/AGENTS.md found)
+- Language: TypeScript
+- Framework: Next.js 14
+- Quality Tools: eslint ✅, prettier ✅, tsc ✅, jest ✅
+- Bootstrap Required: No
+- RESEARCH PHASE: Required
 ```
 
 ```
