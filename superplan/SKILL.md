@@ -32,11 +32,12 @@ Superplan creates detailed, executable implementation plans that enable parallel
 │  3. INTERVIEW       →  Ask clarifying questions                     │
 │  4. RESEARCH        →  Look up best practices for DETECTED STACK    │
 │  5. EXPLORE         →  Understand existing codebase patterns        │
-│  6. ARCHITECT       →  Design solution with diagrams                │
-│  7. PHASE           →  Break into parallelizable phases + ESTIMATES │
-│  8. DETAIL          →  Specify code deltas per phase                │
-│  9. TEST            →  Define failing tests per phase (TDD)         │
-│ 10. DOCUMENT        →  Write plan to docs/<feature>-plan.md         │
+│  6. REFACTOR ASSESS →  Evaluate if refactoring should precede work  │
+│  7. ARCHITECT       →  Design solution with diagrams                │
+│  8. PHASE           →  Break into parallelizable phases + ESTIMATES │
+│  9. DETAIL          →  Specify code deltas per phase                │
+│ 10. TEST            →  Define failing tests per phase (TDD)         │
+│ 11. DOCUMENT        →  Write plan to docs/<feature>-plan.md         │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -200,7 +201,116 @@ Document: Relevant files table, patterns to follow, integration points, technica
 
 ---
 
-## Phase 6: ARCHITECT - Solution Design
+## Phase 6: REFACTOR/REWRITE ASSESSMENT
+
+### What You're Doing
+Evaluating whether the feature/fix would benefit from refactoring or rewriting existing code BEFORE implementation. This phase synthesizes your research on best practices with your exploration of the codebase to make a data-driven refactoring decision.
+
+### CRITICAL: Be Bold
+
+This phase empowers you to **proactively recommend refactoring**. Don't be timid—if the code needs work, say so. Use the Q&A system to discuss major refactoring opportunities with the user.
+
+### Assessment Process (USE PARALLEL WEB SEARCHES)
+
+**Step 1: Research Refactoring for Detected Stack**
+
+Launch parallel web searches for stack-specific refactoring:
+- **[Language] refactoring patterns 2025** - e.g., "TypeScript refactoring patterns 2025"
+- **[Framework] code smells** - e.g., "React code smells anti-patterns"
+- **[Dependency] migration guide** - For major dependencies that may need updating
+
+**Step 2: Apply Code Smell Detection**
+
+Using your exploration results, check for these smells in affected areas:
+
+| Category | Smells to Check |
+|----------|-----------------|
+| **Bloaters** | Long methods, large classes, primitive obsession, data clumps |
+| **OO Abusers** | Switch statements on types, parallel inheritance hierarchies |
+| **Change Preventers** | Divergent change, shotgun surgery |
+| **Dispensables** | Duplicate code, dead code, speculative generality |
+| **Couplers** | Feature envy, inappropriate intimacy, message chains |
+
+**Step 3: Architecture Assessment**
+
+Evaluate:
+- Does the current architecture cleanly support this feature?
+- Will implementing this feature increase technical debt?
+- Are there architectural patterns being violated?
+- Is there a cleaner abstraction that would help?
+
+**Step 4: Future Roadmap Interview**
+
+**ASK THE USER** about upcoming features that might tip the scales toward refactoring:
+
+> "Before I finalize the plan, I want to understand your roadmap:
+> 1. What other features are planned for this area in the next 6 months?
+> 2. How often does this part of the codebase change?
+> 3. Are there pain points here that slow down development?
+> 4. What's your risk tolerance for refactoring vs. shipping fast?"
+
+This information is CRITICAL for making the right refactoring decision.
+
+### Decision Framework
+
+| Scenario | Recommendation |
+|----------|----------------|
+| Feature adds code to messy area | **Refactor first** |
+| Feature touches well-structured code | **Implement directly** |
+| Multiple upcoming features need same area | **Refactor first** |
+| Team struggles to understand the code | **Refactor first** |
+| One-off change to stable code | **Implement directly** |
+| Tight deadline, low complexity | **Implement, document debt** |
+| Tight deadline, high complexity | **Discuss trade-offs with user** |
+
+### Refactoring Confidence Levels
+
+Based on your assessment, declare a confidence level:
+
+| Level | Description | Action |
+|-------|-------------|--------|
+| **LOW** | Code is clean, feature fits naturally | Proceed to ARCHITECT |
+| **MEDIUM** | Some smells present, feature workable | Note debt, ask user preference |
+| **HIGH** | Significant issues, feature will worsen debt | Recommend refactor phases |
+| **CRITICAL** | Major rewrite needed, current approach unsustainable | Propose rewrite with Mikado/Strangler Fig |
+
+### When Confidence is HIGH or CRITICAL
+
+If you determine refactoring should precede the feature work:
+
+1. **Ask permission explicitly**:
+   > "Based on my analysis, I recommend refactoring [specific area] BEFORE implementing [feature]. This would involve:
+   > - [Refactoring task 1]
+   > - [Refactoring task 2]
+   >
+   > Benefits: [list benefits]
+   > Risks of NOT refactoring: [list risks]
+   >
+   > **Do you want me to add refactoring phases to the plan?**"
+
+2. **If approved**, prepend refactoring phases (Phase 0A, 0B, etc.) before feature phases
+
+3. **Select appropriate methodology**:
+   - **Mikado Method**: For complex, interconnected changes where you need to discover dependencies
+   - **Strangler Fig**: For replacing entire subsystems incrementally
+   - **Branch by Abstraction**: For swapping implementations behind interfaces
+   - **Standard Refactoring**: For isolated code smell fixes
+
+### Output
+
+Document:
+- Code smells found (with file locations)
+- Architecture assessment summary
+- Future roadmap impact analysis
+- Refactoring confidence level (LOW/MEDIUM/HIGH/CRITICAL)
+- Recommended refactoring methodology (if applicable)
+- User's decision on refactoring
+
+See [Refactoring Research](references/REFACTORING-RESEARCH.md) for comprehensive methodology details, code smell catalogs, and technology-specific patterns.
+
+---
+
+## Phase 7: ARCHITECT - Solution Design
 
 ### What You're Doing
 Designing the technical solution with diagrams.
@@ -218,7 +328,7 @@ Use ASCII/text diagrams for portability. See [Plan Template](references/PLAN-TEM
 
 ---
 
-## Phase 7: PHASE - Parallel Work Breakdown with Estimates
+## Phase 8: PHASE - Parallel Work Breakdown with Estimates
 
 ### What You're Doing
 Breaking work into phases with **poker estimates** that can be executed in parallel where possible.
@@ -251,7 +361,7 @@ Include dependency table with estimates:
 
 ---
 
-## Phase 8: DETAIL - Code Deltas Per Phase
+## Phase 9: DETAIL - Code Deltas Per Phase
 
 ### What You're Doing
 Specifying exact code changes for each phase.
@@ -267,7 +377,7 @@ See [Plan Template](references/PLAN-TEMPLATE.md) for full code delta examples.
 
 ---
 
-## Phase 9: TEST - TDD Acceptance Criteria
+## Phase 10: TEST - TDD Acceptance Criteria
 
 ### What You're Doing
 Defining failing tests for each phase BEFORE implementation.
@@ -435,10 +545,20 @@ Files changed:
 
 ---
 
-## Phase 10: DOCUMENT - Write the Plan
+## Phase 11: DOCUMENT - Write the Plan
 
 ### What You're Doing
 Writing the complete plan to `docs/<feature>-plan.md`.
+
+### Plan Execution
+
+Once the plan is complete, ask the user:
+
+> **Would you like me to execute this plan with `/superbuild`, or do you want to review/modify it first?**
+
+If the user wants to execute and has `superbuild` installed, invoke it directly with the plan path.
+
+If `superbuild` is not installed, direct them to install it from: **https://github.com/adamos486/skills**
 
 ### Multi-File Strategy
 
@@ -491,11 +611,12 @@ For large plans, write in chunks to prevent context loss:
 3. **Interview** → Ask 3-5 clarifying questions, wait for answers
 4. **Research** → Web search best practices FOR DETECTED STACK (USE PARALLEL SEARCHES)
 5. **Explore** → Analyze codebase patterns and integration points
-6. **Architect** → Design solution with diagrams
-7. **Phase** → Break into parallelizable phases WITH POKER ESTIMATES
-8. **Detail** → Specify code deltas per phase WITH DEFINITION OF DONE
-9. **Test** → Define failing tests (TDD) per phase
-10. **Document** → Write to `docs/<feature>-plan.md`
+6. **Refactor Assess** → Evaluate code smells, interview on roadmap, decide if refactoring needed
+7. **Architect** → Design solution with diagrams
+8. **Phase** → Break into parallelizable phases WITH POKER ESTIMATES
+9. **Detail** → Specify code deltas per phase WITH DEFINITION OF DONE
+10. **Test** → Define failing tests (TDD) per phase
+11. **Document** → Write to `docs/<feature>-plan.md`
 
 **PHASE COMPLETION (after each phase during execution):**
 - Check off all completed tasks in the plan document
@@ -514,11 +635,21 @@ DETECT COMPLETE
 ```
 
 ```
+REFACTOR ASSESSMENT COMPLETE
+- Confidence: HIGH
+- Code smells found: Long methods (3), duplicate code (2), feature envy (1)
+- Future roadmap: 2 related features planned next quarter
+- Recommendation: Refactor UserService before feature implementation
+- User decision: APPROVED - Adding Phase 0A (refactor) to plan
+```
+
+```
 PHASES DEFINED (with estimates)
-- Total phases: 5
-- Total estimate: 26 points
+- Total phases: 6 (including refactor phase)
+- Total estimate: 31 points
+- Refactor phase: 0A (5pts) - must complete first
 - Parallelizable: 1A (8pts), 1B (5pts), 1C (3pts) - USE SUB-AGENTS
-- Sequential: Phase 0 (5pts) → Phase 1s → Phase 2 (5pts)
+- Sequential: Phase 0A → Phase 1s → Phase 2 (5pts)
 ```
 
 ```
@@ -551,6 +682,7 @@ See [Execution Guide](references/EXECUTION-GUIDE.md) for full execution instruct
 For detailed guidance on specific topics:
 
 - [Interview Guide](references/INTERVIEW-GUIDE.md) - Comprehensive question templates by category and feature size
+- [Refactoring Research](references/REFACTORING-RESEARCH.md) - Refactoring methodologies (Mikado, Strangler Fig, Branch by Abstraction), code smells catalog, decision frameworks
 - [Plan Template](references/PLAN-TEMPLATE.md) - Full plan file structure with all sections and examples
 - [Testing Pyramid](references/TESTING-PYRAMID.md) - TDD workflow, test examples, durable vs brittle tests
 - [Execution Guide](references/EXECUTION-GUIDE.md) - Step-by-step execution flow and checkpoint templates
