@@ -26,6 +26,61 @@ You are a professor guiding a student from first-year undergraduate through grad
 /teach                       # Prompts for topic/files
 ```
 
+## Session Initialization (Check for Existing Progress)
+
+**Before teaching begins, always check for existing progress.**
+
+**Progress location:** `~/.skulto/teach/{topic-slug}/progress.md`
+
+**Topic slug:** Derived from content name (lowercase, hyphens for spaces)
+- "Phase 2 Core Infrastructure" → `phase-2-core-infrastructure`
+- "Vector Databases Deep Dive" → `vector-databases-deep-dive`
+
+### Startup Flow
+
+```
+1. User invokes /teach @doc.md
+2. Generate topic slug from document name(s)
+3. Check: Does ~/.skulto/teach/{slug}/progress.md exist?
+
+   EXISTS → Show summary and ask:
+
+     "Found existing progress for 'Vector Databases':
+      ✓ 2/5 chunks mastered
+      ⚠ 1 chunk in progress
+      ○ 2 chunks remaining
+      Last session: 2024-01-23
+
+      Resume where you left off, or start fresh?"
+
+   Resume → Load state, run recall quiz on mastered chunks, continue
+   Start fresh → Archive old file (rename with date), create new
+
+   DOES NOT EXIST → Create directory and progress.md, proceed normally
+```
+
+### Creating Progress File
+
+When starting a new topic, create the directory and file using tools:
+
+```bash
+mkdir -p ~/.skulto/teach/{topic-slug}
+```
+
+Then write initial `progress.md` with the template from [progress-template.md](references/progress-template.md).
+
+### Updating Progress File
+
+**After each chunk is mastered**, immediately update `progress.md`:
+1. Update the chunk's status in the Learning Path table
+2. Add session notes if significant (struggles, breakthroughs, backfills)
+3. Update "Last session" date
+
+**At session end**, add a Session History entry summarizing:
+- Chunks completed
+- Any backfills performed
+- Key observations about learner's strengths/gaps
+
 ## Session Flow
 
 ```dot
@@ -281,10 +336,29 @@ Continue, or save progress for later?
 
 ### Resuming Sessions
 
-1. Quick recall quiz (3-4 questions on previous material)
-2. If rusty (< 60% correct): Brief refresher before new material
-3. If solid (80%+ correct): Proceed with confidence
-4. Always reconnect: "Last time we established X. Today we'll build on that..."
+When user chooses "Resume" from the initialization prompt:
+
+1. **Read progress.md** to understand current state
+2. **Show status summary:**
+   ```
+   Welcome back. Here's where we are:
+
+   MASTERED:
+   ✓ Dual storage architecture (4/4)
+   ✓ SQLite FTS5 (3.5/4)
+
+   IN PROGRESS:
+   ⚠ Vector embeddings (2/4 last attempt - needs reteach)
+
+   REMAINING:
+   ○ Indexing pipeline
+   ○ Retrieval strategies
+   ```
+3. **Run recall quiz** (3-4 questions on mastered chunks)
+4. If rusty (< 60% correct): Brief refresher, update notes in progress.md
+5. If solid (80%+ correct): Proceed with confidence
+6. **Resume at current chunk** or reteach if previous attempt failed
+7. Always reconnect: "Last time we established X. Today we'll build on that..."
 
 ## Tone
 
