@@ -2,8 +2,8 @@
 name: superplan
 description: Use when starting significant features, epics, or complex tasks. Creates multi-phase implementation plans with parallelizable phases, poker estimates, TDD-first acceptance criteria, and quality gates. Detects tech stack from CLAUDE.md/AGENTS.md (bypassing internet research if complete) or via codebase scan.
 metadata:
-  version: "2.1"
-  generated-at: "2025-01-21"
+  version: "2.2"
+  generated-at: "2026-01-24"
 compatibility: Internet access used for best practices research (bypassed if CLAUDE.md/AGENTS.md provides complete tech stack). Works with any codebase.
 ---
 
@@ -301,7 +301,36 @@ Using your exploration results, check for these smells in affected areas:
 | **Dispensables** | Duplicate code, dead code, speculative generality |
 | **Couplers** | Feature envy, inappropriate intimacy, message chains |
 
-**Step 3: Architecture Assessment**
+**Step 3: AI Slop Analysis (Optional Enhancement)**
+
+Check if the `slop-or-not` skill is available to enhance refactor detection:
+
+1. **Check Availability**: Attempt to invoke `/slop-or-not`
+   - If **not installed**, inform the user:
+     > "The `slop-or-not` skill can enhance refactor assessment by detecting
+     > AI-generated code anti-patterns (hallucinations, cross-language contamination,
+     > security vulnerabilities). Install from: https://github.com/asteroid-belt/skills
+     >
+     > **Would you like to pause to install it?** (y/n)"
+   - If user says **yes**: Wait for installation, then re-check
+   - If user says **no** or skill unavailable: Skip to Step 4, note "Slop analysis: SKIPPED (skill not installed)"
+
+2. **Run Slop Scan**: If available, invoke `/slop-or-not` targeting:
+   - Files identified in EXPLORE phase as modification candidates
+   - Areas flagged with code smells in Step 2
+
+3. **Apply Reciprocal Rank Fusion**: Combine modification paths with slop findings:
+   ```
+   RRF_score(file) = 1/(60 + modification_rank) + 1/(60 + slop_rank)
+   ```
+   Files appearing in BOTH lists (need modification AND contain AI slop) score highest.
+
+4. **Output Combined Priority List**: Rank refactor candidates by RRF score, noting:
+   - Modification necessity (from architect analysis)
+   - Slop confidence level (CRITICAL/HIGH/MEDIUM/LOW)
+   - Specific anti-patterns detected (hallucinations, cross-language, security, etc.)
+
+**Step 4: Architecture Assessment**
 
 Evaluate:
 - Does the current architecture cleanly support this feature?
@@ -309,7 +338,7 @@ Evaluate:
 - Are there architectural patterns being violated?
 - Is there a cleaner abstraction that would help?
 
-**Step 4: Future Roadmap Interview**
+**Step 5: Future Roadmap Interview**
 
 **ASK THE USER** about upcoming features that might tip the scales toward refactoring:
 
@@ -326,6 +355,7 @@ This information is CRITICAL for making the right refactoring decision.
 | Scenario | Recommendation |
 |----------|----------------|
 | Feature adds code to messy area | **Refactor first** |
+| Modification path has HIGH/CRITICAL AI slop | **Refactor first** |
 | Feature touches well-structured code | **Implement directly** |
 | Multiple upcoming features need same area | **Refactor first** |
 | Team struggles to understand the code | **Refactor first** |
@@ -370,6 +400,8 @@ If you determine refactoring should precede the feature work:
 
 Document:
 - Code smells found (with file locations)
+- AI slop findings (with confidence scores) - if slop-or-not available
+- Combined refactor priority list (RRF-ranked) - if slop-or-not available
 - Architecture assessment summary
 - Future roadmap impact analysis
 - Refactoring confidence level (LOW/MEDIUM/HIGH/CRITICAL)
@@ -720,6 +752,11 @@ DETECT COMPLETE (from codebase scan)
 REFACTOR ASSESSMENT COMPLETE
 - Confidence: HIGH
 - Code smells found: Long methods (3), duplicate code (2), feature envy (1)
+- AI slop detected: 4 files with high-confidence findings (via slop-or-not)
+- Top refactor candidates (RRF-ranked):
+  1. api/users.py (modification priority + CRITICAL slop)
+  2. auth/login.py (modification priority + HIGH slop)
+  3. utils/helpers.py (modification priority + MEDIUM slop)
 - Future roadmap: 2 related features planned next quarter
 - Recommendation: Refactor UserService before feature implementation
 - User decision: APPROVED - Adding Phase 0A (refactor) to plan

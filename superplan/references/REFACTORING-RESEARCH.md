@@ -405,6 +405,58 @@ When considering refactoring, probe the user with:
 
 ---
 
+## AI Slop as a Refactoring Signal
+
+### Overview
+
+AI-generated code ("slop") presents unique refactoring challenges. Research shows:
+- **42% of AI code contains hallucinations** (non-existent APIs, packages)
+- **40% contains security vulnerabilities** (hardcoded secrets, injection risks)
+- Cross-language contamination causes subtle runtime bugs
+
+### Integration with Refactor Assessment
+
+When the `slop-or-not` skill is available, superplan combines traditional code smell detection with AI slop analysis using **Reciprocal Rank Fusion (RRF)**:
+
+```
+RRF_score(file) = 1/(60 + modification_rank) + 1/(60 + slop_rank)
+```
+
+Files that:
+1. Need modification for the planned feature, AND
+2. Contain AI slop anti-patterns
+
+...are prioritized for refactoring because:
+- You're already touching the code (minimal marginal effort)
+- AI slop compounds technical debt faster than traditional smells
+- Security vulnerabilities in modification paths create immediate risk
+
+### AI Slop Categories
+
+| Category | Confidence | Impact |
+|----------|------------|--------|
+| Hallucinated imports | 85-100% | Runtime failures |
+| Cross-language contamination | 85-100% | Subtle bugs |
+| Hardcoded secrets | 85-100% | Security breach |
+| Mutable default arguments | 85-100% | Shared state bugs |
+| Hedging comments | 65-84% | Uncertain behavior |
+| Placeholder code | 65-84% | Incomplete features |
+
+### When to Prioritize Slop Refactoring
+
+| Slop Confidence | In Modification Path? | Action |
+|-----------------|----------------------|--------|
+| CRITICAL (85%+) | Yes | **Refactor first** |
+| CRITICAL (85%+) | No | Note for future |
+| HIGH (65-84%) | Yes | **Refactor first** |
+| HIGH (65-84%) | No | Consider refactoring |
+| MEDIUM/LOW | Yes | Optional cleanup |
+| MEDIUM/LOW | No | Ignore |
+
+For more details on AI slop patterns, see the `slop-or-not` skill at: https://github.com/asteroid-belt/skills
+
+---
+
 ## Sources
 
 - [Martin Fowler's Refactoring](https://martinfowler.com/books/refactoring.html)
