@@ -1,0 +1,43 @@
+# Walkthrough Hub — GitLab Pages deploy (COMMENTED STUB)
+# =====================================================================
+# This is the GitLab CI equivalent of github-pages.yml. To enable it,
+# copy the contents below into your repo's `.gitlab-ci.yml` (or `include`
+# it) and uncomment. GitLab Pages serves whatever ends up in the `public/`
+# artifact, so we build the hub and then move .walkthrough/dist -> public/.
+#
+# Base path: GitLab project Pages are served under
+#   https://<group>.gitlab.io/<project>/   (or a custom domain at "/").
+# We derive the base from $CI_PROJECT_NAME; override WT_BASE if you use a
+# custom domain served at the root.
+# ---------------------------------------------------------------------
+#
+# pages:
+#   stage: deploy
+#   image: node:20
+#   rules:
+#     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+#       changes:
+#         - .walkthrough/**/*
+#     - if: '$CI_PIPELINE_SOURCE == "web"'   # manual run
+#   variables:
+#     WT_BASE: "/$CI_PROJECT_NAME/"
+#   script:
+#     # TODO (route engine): rebuild .walkthrough/content/routes/*.html from
+#     # DSL sources here if your repo keeps DSL sources rather than committed HTML.
+#     #
+#     # Inlined build-hub.mjs copy steps:
+#     - mkdir -p .walkthrough/hub/public
+#     - cp .walkthrough/walkthrough.config.json .walkthrough/hub/public/walkthrough.config.json
+#     - rm -rf .walkthrough/hub/public/content
+#     - if [ -d .walkthrough/content ]; then cp -R .walkthrough/content .walkthrough/hub/public/content; fi
+#     # Build the Vite hub:
+#     - cd .walkthrough/hub
+#     - npm ci || npm install
+#     - npm run build
+#     - cd ../..
+#     # GitLab Pages publishes the `public/` directory:
+#     - rm -rf public
+#     - cp -R .walkthrough/hub/dist public
+#   artifacts:
+#     paths:
+#       - public

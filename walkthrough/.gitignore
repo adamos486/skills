@@ -1,0 +1,12 @@
+# Build dependencies — installed via `npm install`, never committed
+node_modules/
+scripts/node_modules/
+assets/hub-template/node_modules/
+
+# Local build artifacts
+dist/
+*.log
+.DS_Store
+
+# Temp dirs from mermaid pre-rendering
+wt-mmd-*/
