@@ -9,6 +9,43 @@ and never gating** — the learner is in control at all times.
 prerequisite scaffolding, mastery ladders). Here we use those ideas to *structure and
 brainstorm* content — we never block the reader on a quiz.
 
+## The learner is the only reader (hard rule)
+
+Everything that renders in the browser — every route, the hub, every callout, reveal,
+diagram caption, and table — is written **for the learner and no one else**. The learner
+never sees, and must never be addressed by, anything meant for the *author*, a *reviewer*,
+an *agent*, or a future editor. The page is a lesson, not a workspace.
+
+**Never render, in any form a browser shows:**
+
+- **Authoring meta-commentary** — "an older draft said…", "a previous model claimed…",
+  "this was corrected", "myth correction", "verified against source", "the docs had
+  drifted", "fact-checked". The learner has no prior draft to correct against; to them
+  there is only *this* lesson.
+- **Instructions to the author/agent** — "don't teach the old version", "we should…",
+  "note: rewrite this", "TODO", "FIXME", "as the author you…".
+- **Process exhaust** — how the content was produced, what was checked, which sources were
+  read, what an earlier version got wrong.
+
+**Why:** meta-commentary breaks the lesson's frame and confuses the learner — they don't
+know what "the 4-category version" is, and telling them not to learn it plants the wrong
+idea while wasting their attention. State the correct thing **plainly and positively**, as
+settled fact, with no reference to the path that got you there.
+
+> ❌ *"Myth correction. An older model described 4 categories with a severity per category.
+> That's wrong — the real design is 9 categories, severity per pattern. Don't teach the
+> 4-category version."*
+>
+> ✅ *"The scanner sorts threats into **9 categories**, and severity is assigned **per
+> pattern** — a single category (e.g. dangerous scripts) spans MEDIUM to CRITICAL."*
+
+If you discover the source you ingested was itself wrong, you simply teach the truth — you
+do **not** narrate the discrepancy to the learner. (Keep that correction in your reply to
+the user instead, where it belongs.)
+
+The build step runs an **audience linter** (`build-walkthrough.mjs`) that flags common
+meta/author-facing phrases as warnings — treat any hit as a defect to rewrite, not noise.
+
 ## Write for the declared audience
 
 The frontmatter `audience` is your target. It changes depth, vocabulary, and emphasis:

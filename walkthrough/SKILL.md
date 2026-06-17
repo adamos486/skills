@@ -15,6 +15,14 @@ highlighting, diagram rendering, the TOC, quizzes, and progress — so every rou
 consistent and offline-capable. Hand-writing HTML (or hand-drawing SVG, or hand-tokenizing
 code) is the anti-pattern this skill exists to prevent.
 
+**Audience principle (hard rule):** everything that renders in the browser is **for the
+learner and no one else** — never the author, a reviewer, or an agent. Never render
+authoring meta-commentary ("an older draft said…", "myth correction", "verified against
+source", "don't teach the old version", "TODO"). State the correct thing plainly as
+settled fact; keep any correction-of-the-source in your reply to the user, not on the page.
+The build runs an **audience linter** that flags these; treat hits as defects. See
+`references/pedagogy.md` → *The learner is the only reader*.
+
 **Theme:** every generated page (routes and hub) ships **both a light and a dark palette**
 baked in — default light, with a persisted toggle (no flash on load, no runtime fetch).
 Code highlighting uses Shiki dual themes (CSS-variable mode), so light/dark switch offline.
@@ -116,6 +124,9 @@ it diagrams still render offline via an inlined runtime (larger files).
 - **Forgetting to register the route** in `walkthrough.config.json` — the hub won't show it.
 - **Summarizing instead of teaching.** Produce a learning artifact (explain → example →
   check → synthesis), not a recap.
+- **Addressing anyone but the learner.** No meta-commentary, no notes-to-the-author, no
+  "an earlier version got this wrong." The learner is the only reader; the audience linter
+  flags the common tells. See `references/pedagogy.md`.
 
 ## References
 
