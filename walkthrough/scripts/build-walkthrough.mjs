@@ -44,6 +44,7 @@ function parseArgs(argv) {
     else if (t === "--light-theme") a.lightTheme = argv[++i];
     else if (t === "--quiet") a.quiet = true;
     else if (t === "--strict") a.strict = true;
+    else if (t === "--share") a.share = true;
     else if (t === "--help" || t === "-h") a.help = true;
     else a._.push(t);
   }
@@ -53,7 +54,7 @@ const args = parseArgs(process.argv.slice(2));
 const log = (...m) => { if (!args.quiet) console.error("[walkthrough]", ...m); };
 
 if (args.help || args._.length === 0) {
-  console.log("Usage: build-walkthrough.mjs <input.md> [--out file.html] [--light-theme github-light] [--dark-theme night-owl] [--quiet] [--strict]");
+  console.log("Usage: build-walkthrough.mjs <input.md> [--out file.html] [--light-theme github-light] [--dark-theme night-owl] [--quiet] [--strict] [--share]");
   process.exit(args.help ? 0 : 1);
 }
 
@@ -304,6 +305,45 @@ async function renderQuiz(body) {
   return `<div class="wt-quiz"><div class="q">${q}</div><div class="opts">${optHtml}</div>${explain}</div>`;
 }
 
+/* ------------------------------------------------------- share-mode chrome -- */
+/* Everything below is gated behind --share and is injected chrome (not authored
+   content), so it never reaches the audience linter (which scans the source md).
+   A widget is a collapsible <details> per h2 section + one overall box; a single
+   inline runtime wires them with addEventListener — NO inline on* handlers, NO
+   javascript: URLs — so the page stays CSP-clean (script-src 'nonce-…'). */
+
+/** Collapsible feedback widget for a section id (use "__overall__" for the box). */
+function feedbackWidget(sectionId, label) {
+  return `<details class="wt-feedback" data-section-id="${escapeHtml(sectionId)}">` +
+    `<summary>${escapeHtml(label)}</summary>` +
+    `<form data-wt-feedback-form>` +
+    `<textarea class="wt-feedback-text" rows="3" placeholder="Share feedback on this section…"></textarea>` +
+    `<button class="wt-feedback-send" type="submit">Send feedback</button>` +
+    `</form></details>`;
+}
+
+/* Shared inline runtime (injected once). Reads view_token from the global the
+   Worker injects at serve time, and the CSRF token from the __Host-csrf- cookie.
+   The POST body carries ONLY {section_id, text, view_token} — no name/title/order. */
+const SHARE_RUNTIME = `(function(){
+  function csrf(){var m=document.cookie.match(/(?:^|;\\s*)__Host-csrf-[^=]*=([^;]*)/);return m?decodeURIComponent(m[1]):"";}
+  document.querySelectorAll("form[data-wt-feedback-form]").forEach(function(form){
+    form.addEventListener("submit",function(event){
+      event.preventDefault();
+      var box=form.closest(".wt-feedback");
+      var section_id=box?box.getAttribute("data-section-id"):"";
+      var ta=form.querySelector("textarea");
+      var text=ta?ta.value:"";
+      var view_token=window.__WT_VIEW_TOKEN__||"";
+      fetch(location.pathname.replace(/\\/$/, "") + "/feedback",{
+        method:"POST",
+        headers:{"Content-Type":"application/json","X-CSRF-Token":csrf()},
+        body:JSON.stringify({section_id:section_id,text:text,view_token:view_token})
+      }).then(function(){if(box)box.classList.add("wt-feedback-sent");if(ta)ta.value="";});
+    });
+  });
+})();`;
+
 /* ----------------------------------------------------------------- build --- */
 async function build() {
   const inputPath = path.resolve(args._[0]);
@@ -348,6 +388,11 @@ async function build() {
 
   // Render pass: async highlight + custom renderers (deterministic slugger #2).
   const slugRender = makeSlugger();
+  // Share mode: collect h2 sections (manifest) and close the previous section
+  // with its feedback widget when the next h2 opens. ids come from slugRender so
+  // they match the manifest exactly.
+  const shareSections = [];
+  let openSectionId = null;
   marked.setOptions({ gfm: true, breaks: false });
   marked.use({
     async: true,
@@ -368,7 +413,13 @@ async function build() {
       },
       heading(text, level) {
         const id = level >= 1 && level <= 3 ? slugRender(text) : "";
-        return `<h${level}${id ? ` id="${id}"` : ""}>${text}</h${level}>\n`;
+        const tag = `<h${level}${id ? ` id="${id}"` : ""}>${text}</h${level}>\n`;
+        if (!args.share || level !== 2) return tag;
+        // Close the previous h2 section with its widget, then open this one.
+        const prefix = openSectionId ? feedbackWidget(openSectionId, "Feedback on this section") : "";
+        openSectionId = id;
+        shareSections.push({ section_id: id, title: text.replace(/<[^>]+>/g, "").trim(), order: shareSections.length });
+        return prefix + tag;
       },
     },
   });
@@ -376,6 +427,12 @@ async function build() {
   let bodyHtml = await marked.parse(md);
   // Swap placeholders for rendered blocks (handle marked wrapping the comment in <p>).
   bodyHtml = bodyHtml.replace(/(?:<p>\s*)?<!--WTBLOCK:(\d+)-->(?:\s*<\/p>)?/g, (_, n) => blockHtml[+n]);
+
+  // Share mode: close the final section, then add the overall feedback box.
+  if (args.share) {
+    if (openSectionId) bodyHtml += feedbackWidget(openSectionId, "Feedback on this section");
+    bodyHtml += feedbackWidget("__overall__", "Overall feedback on this walkthrough");
+  }
 
   // Assemble.
   const css = fs.readFileSync(path.join(ASSETS, "route-styles.css"), "utf8");
@@ -396,6 +453,14 @@ async function build() {
   } else if (diagram.mode === "svg") {
     log(`mermaid: pre-rendered ${diagram.count} diagram(s) to inline SVG via mermaid-cli`);
   }
+
+  // Share mode keeps the page CSP-clean: no javascript: URLs. The resume control's
+  // click is wired in route-runtime.js via addEventListener, so a <button> works
+  // identically to the anchor (which only used href="javascript:void 0" cosmetically).
+  const resumeEl = args.share
+    ? `<button class="wt-resume" type="button" style="display:none;font-size:12px;color:var(--wt-accent-2);background:none;border:0;padding:0;cursor:pointer;text-align:left"></button>`
+    : `<a class="wt-resume" href="javascript:void 0" style="display:none;font-size:12px;color:var(--wt-accent-2)"></a>`;
+  const shareScript = args.share ? `<script>${SHARE_RUNTIME}</script>` : "";
 
   const html = `<!doctype html>
 <html lang="en">
@@ -420,7 +485,7 @@ ${summary ? `<meta name="description" content="${escapeHtml(summary)}">` : ""}
     <h1>${escapeHtml(title)}</h1>
     ${summary ? `<p style="color:var(--wt-muted);font-size:13px;margin:.2em 0 0">${escapeHtml(summary)}</p>` : ""}
     <div class="wt-meta-badges">${badges}</div>
-    <a class="wt-resume" href="javascript:void 0" style="display:none;font-size:12px;color:var(--wt-accent-2)"></a>
+    ${resumeEl}
     <ul class="wt-toc">${tocHtml}</ul>
   </aside>
   <main class="wt-main">
@@ -434,7 +499,7 @@ ${summary ? `<meta name="description" content="${escapeHtml(summary)}">` : ""}
   </main>
 </div>
 ${mermaidRuntime}
-<script>${js}</script>
+<script>${js}</script>${shareScript}
 </body>
 </html>`;
 
@@ -445,6 +510,14 @@ ${mermaidRuntime}
   fs.writeFileSync(outPath, html, "utf8");
   const kb = (Buffer.byteLength(html) / 1024).toFixed(1);
   log(`wrote ${outPath} (${kb} KB, ${toc.length} headings, ${diagram.count} diagram(s), mode=${diagram.mode})`);
+
+  // Share mode: emit the section manifest next to the output for the CLI to read.
+  // ids come from the same render slugger, so they match the injected widgets.
+  if (args.share) {
+    const manifestPath = `${outPath}.manifest.json`;
+    fs.writeFileSync(manifestPath, JSON.stringify(shareSections, null, 2), "utf8");
+    log(`wrote section manifest ${manifestPath} (${shareSections.length} section(s))`);
+  }
 
   // Emit a manifest line for the hub to consume.
   return { title, slug: wtId, file: outPath, audience, summary, tags, source, bytes: Buffer.byteLength(html) };

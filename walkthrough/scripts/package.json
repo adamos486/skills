@@ -8,7 +8,8 @@
     "build-walkthrough": "./build-walkthrough.mjs"
   },
   "scripts": {
-    "build:route": "node build-walkthrough.mjs"
+    "build:route": "node build-walkthrough.mjs",
+    "test": "node --test"
   },
   "dependencies": {
     "gray-matter": "^4.0.3",
