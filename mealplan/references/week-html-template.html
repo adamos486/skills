@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mealplan week</title>
+<style>
+  :root { --bg:#faf9f6; --card:#fff; --ink:#222; --muted:#777; --accent:#2f7d4f; --line:#e6e4df; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:16px/1.5 -apple-system,system-ui,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--ink); }
+  header { position:sticky; top:0; background:var(--card); border-bottom:1px solid var(--line); padding:12px 16px; }
+  h1 { font-size:18px; margin:0; }
+  .week { color:var(--muted); font-size:13px; }
+  nav { display:flex; gap:8px; padding:8px 16px; position:sticky; top:52px; background:var(--bg); }
+  nav button { flex:1; padding:10px; border:1px solid var(--line); background:var(--card); border-radius:10px; font:inherit; }
+  nav button.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+  main { padding:16px; max-width:720px; margin:0 auto; }
+  section { display:none; } section.active { display:block; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; margin:0 0 12px; }
+  .meal h3 { margin:0 0 4px; } .meal .meta { color:var(--muted); font-size:13px; }
+  ol { margin:8px 0 0 18px; padding:0; }
+  .group { font-weight:600; margin:16px 0 6px; }
+  label.item { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--line); }
+  label.item input { width:20px; height:20px; }
+  label.item.done span { text-decoration:line-through; color:var(--muted); }
+  .tag { font-size:11px; color:var(--muted); border:1px solid var(--line); border-radius:6px; padding:1px 5px; margin-left:auto; }
+  .tag.verify { color:#b4660a; border-color:#e9c08a; }
+  a { color:var(--accent); }
+</style>
+</head>
+<body>
+<header><h1>mealplan</h1><div class="week" id="weekLabel"></div></header>
+<nav>
+  <button data-tab="menu" class="active">Menu</button>
+  <button data-tab="shopping">Shopping</button>
+  <button data-tab="snacks">Snacks</button>
+</nav>
+<main>
+  <section id="menu" class="active"></section>
+  <section id="shopping"></section>
+  <section id="snacks"></section>
+</main>
+
+<script id="weekdata" type="application/json">
+{
+  "week": "REPLACE_WEEK",
+  "chain": "REPLACE_CHAIN",
+  "menu": [
+    {"id":"mon-dinner-example","day":"Mon","slot":"Dinner","title":"Example meal","servings":2,
+     "ingredients":["1 lb chicken","2 cups broccoli"],
+     "instructions":["Step one.","Step two."],"video_query":""}
+  ],
+  "shopping": [
+    {"id":"sl-chicken","section":"Meat & Seafood","product":"Chicken breast","qty":"2 lb","price":"7.99","confidence":"estimated"}
+  ],
+  "snackMenu": [ {"id":"sn-1","title":"Greek yogurt + berries","note":"high protein"} ],
+  "snackShopping": [
+    {"id":"ss-1","product":"Greek yogurt","price":"4.49","confidence":"estimated","source":"local"},
+    {"id":"ss-2","product":"Freeze-dried berries","source":"online","confidence":"verify"}
+  ]
+}
+</script>
+
+<script>
+(function(){
+  var data = JSON.parse(document.getElementById("weekdata").textContent);
+  var week = data.week || "";
+  document.getElementById("weekLabel").textContent = (data.chain ? data.chain + " · " : "") + week;
+  var keyOf = function(id){ return "mealplan:" + week + ":" + id; };
+
+  function checkItem(id, label, extraHtml){
+    var done = localStorage.getItem(keyOf(id)) === "1";
+    var l = document.createElement("label");
+    l.className = "item" + (done ? " done" : "");
+    l.innerHTML = '<input type="checkbox" ' + (done ? "checked" : "") + '><span>' + label + '</span>' + (extraHtml || "");
+    var cb = l.querySelector("input");
+    cb.addEventListener("change", function(){
+      if (cb.checked) localStorage.setItem(keyOf(id), "1"); else localStorage.removeItem(keyOf(id));
+      l.classList.toggle("done", cb.checked);
+    });
+    return l;
+  }
+  function esc(s){ return String(s == null ? "" : s).replace(/[&<>]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c]; }); }
+  function tag(conf){ return conf ? '<span class="tag ' + esc(conf) + '">' + esc(conf) + '</span>' : ''; }
+
+  // Menu
+  var menu = document.getElementById("menu");
+  (data.menu||[]).forEach(function(m){
+    var card = document.createElement("div"); card.className = "card meal";
+    var vid = m.video_query ? '<div><a target="_blank" href="https://www.youtube.com/results?search_query=' + encodeURIComponent(m.video_query) + '">▶ video</a></div>' : '';
+    card.innerHTML = '<h3>' + esc(m.title) + '</h3><div class="meta">' + esc(m.day) + ' · ' + esc(m.slot) + ' · ' + esc(m.servings) + ' servings</div>' +
+      '<div class="meta">' + (m.ingredients||[]).map(esc).join(", ") + '</div>' +
+      '<ol>' + (m.instructions||[]).map(function(s){ return '<li>' + esc(s) + '</li>'; }).join("") + '</ol>' + vid;
+    menu.appendChild(card);
+  });
+
+  // Shopping grouped by section
+  var shopping = document.getElementById("shopping");
+  var groups = {};
+  (data.shopping||[]).forEach(function(it){ (groups[it.section] = groups[it.section] || []).push(it); });
+  Object.keys(groups).forEach(function(sec){
+    var h = document.createElement("div"); h.className = "group"; h.textContent = sec; shopping.appendChild(h);
+    var card = document.createElement("div"); card.className = "card";
+    groups[sec].forEach(function(it){
+      var label = esc(it.product) + (it.qty ? " — " + esc(it.qty) : "") + (it.price ? " · ~$" + esc(it.price) : "");
+      card.appendChild(checkItem(it.id, label, tag(it.confidence)));
+    });
+    shopping.appendChild(card);
+  });
+
+  // Snacks: menu + shopping
+  var snacks = document.getElementById("snacks");
+  if ((data.snackMenu||[]).length){
+    var mh = document.createElement("div"); mh.className="group"; mh.textContent="Snack menu"; snacks.appendChild(mh);
+    var mc = document.createElement("div"); mc.className="card";
+    data.snackMenu.forEach(function(s){ mc.insertAdjacentHTML("beforeend", '<div>' + esc(s.title) + (s.note ? ' <span class="meta">— ' + esc(s.note) + '</span>' : '') + '</div>'); });
+    snacks.appendChild(mc);
+  }
+  var sh = document.createElement("div"); sh.className="group"; sh.textContent="Snack shopping"; snacks.appendChild(sh);
+  var sc = document.createElement("div"); sc.className="card";
+  (data.snackShopping||[]).forEach(function(it){
+    var label = esc(it.product) + (it.price ? " · ~$" + esc(it.price) : "") + (it.source ? " · " + esc(it.source) : "");
+    sc.appendChild(checkItem(it.id, label, tag(it.confidence)));
+  });
+  snacks.appendChild(sc);
+
+  // Tabs
+  document.querySelectorAll("nav button").forEach(function(b){
+    b.addEventListener("click", function(){
+      document.querySelectorAll("nav button").forEach(function(x){ x.classList.remove("active"); });
+      document.querySelectorAll("main section").forEach(function(x){ x.classList.remove("active"); });
+      b.classList.add("active");
+      document.getElementById(b.getAttribute("data-tab")).classList.add("active");
+    });
+  });
+})();
+</script>
+</body>
+</html>
