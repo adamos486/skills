@@ -1,0 +1,47 @@
+<!doctype html>
+<html><head><title>Design Walkthrough — Notification Preferences</title>
+<style>body{font-family:system-ui;max-width:70ch;margin:2rem auto}nav{opacity:.6}</style></head>
+<body>
+<nav><a href="#s1">Why</a> · <a href="#s2">Shape</a> · <a href="#s3">Build</a> · <a href="#s4">Done</a></nav>
+
+<section id="s1">
+<h2>Why we're doing this</h2>
+<p>Users get every notification we send, with no way to turn any of them off. Support gets
+about four complaints a week about it. We want a settings page where a user can toggle each
+of our five notification types on or off, and we want to respect those toggles when sending.</p>
+<p>This is for our existing web app — Next.js front end, Django backend, Postgres.</p>
+</section>
+
+<section id="s2">
+<h2>The shape we landed on</h2>
+<p>We talked about a generic preferences framework that could hold any key/value setting for
+any future feature, with a schema registry and per-key validators. We decided against solving
+that now — we have five booleans.</p>
+<p>Instead: one <code>notification_preferences</code> table, one row per user, five boolean
+columns. A <code>NotificationPreferences</code> model, and a check in the send path.</p>
+</section>
+
+<section id="s3">
+<h2>What we'll build</h2>
+<ol>
+<li>Migration adding <code>notification_preferences</code>, defaulting every column to true so
+existing users keep current behavior.</li>
+<li>Django model plus a <code>get_or_create</code> accessor so users predating the migration
+get a row on first read.</li>
+<li><code>GET</code> and <code>PATCH /api/notification-preferences</code>, scoped to the
+requesting user.</li>
+<li>A settings page with five toggles, saving on change.</li>
+<li>A guard in the notification send path that skips a send when the matching toggle is off.</li>
+</ol>
+</section>
+
+<section id="s4">
+<h2>How we'll know it works</h2>
+<ul>
+<li>A user turning off "product updates" stops receiving product updates and keeps receiving
+the other four types.</li>
+<li>A user who existed before the migration has all five on by default.</li>
+<li>One user's preferences never affect another user's sends.</li>
+</ul>
+</section>
+</body></html>

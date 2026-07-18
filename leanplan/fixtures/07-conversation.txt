@@ -1,0 +1,38 @@
+[transcript excerpt — design discussion, no formal spec was written]
+
+Adam: ok so the thing I actually need is, when someone uploads a CSV to the importer it
+currently just dies if any row is bad. whole thing rolls back. people are uploading 2000-row
+files and losing everything because row 1400 has a bad date.
+
+Assistant: So you want partial success — good rows land, bad rows get reported?
+
+Adam: yeah exactly. and they need to know WHICH rows failed and why so they can fix and
+re-upload just those.
+
+Assistant: What does the re-upload look like — do they fix the original file and send the whole
+thing again, or do you hand them back a file of just the failures?
+
+Adam: hand back a failures CSV. same columns as the original plus an error column. they fix
+that and upload it again. and it has to be idempotent-ish, if they upload a row we already
+imported it shouldn't double-create.
+
+Assistant: How are you identifying "already imported"? Is there a natural key?
+
+Adam: yeah there's an external_id column, it's unique per customer.
+
+Assistant: Got it. So roughly: stream the CSV, validate each row, insert the valid ones in
+batches keyed on (customer, external_id) with an upsert, collect failures with row numbers and
+messages, and return a downloadable failures CSV at the end.
+
+Adam: right. don't overthink it, this is a Rails app, ActiveRecord upsert_all is fine. we do
+maybe 30 imports a day, biggest file we've seen is 8000 rows.
+
+Assistant: Do you need progress reporting for the bigger files, or is a synchronous request ok?
+
+Adam: it's already a background job, it just needs to not blow up. the user gets an email when
+it's done, that email can link to the failures file.
+
+Assistant: And how do you know it works?
+
+Adam: import a file with some good and some bad rows, good ones land, failures file has exactly
+the bad ones with reasons. and re-uploading the same good file twice doesn't duplicate anything.
